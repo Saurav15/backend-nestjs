@@ -8,7 +8,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiResponse } from '../interfaces/api-response.interface';
+import { ApiResponseInterface } from '../interfaces/api-response.interface';
 
 @Catch()
 export class CustomHttpExceptionFilter implements ExceptionFilter {
@@ -29,7 +29,7 @@ export class CustomHttpExceptionFilter implements ExceptionFilter {
     );
 
     // Send response
-    const errorResponse: ApiResponse = {
+    const errorResponse: ApiResponseInterface = {
       status: 'error',
       statusCode,
       message,

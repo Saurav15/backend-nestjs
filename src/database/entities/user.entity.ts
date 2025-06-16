@@ -14,7 +14,7 @@ import {
   MinLength,
   IsBoolean,
 } from 'class-validator';
-import { UserRole } from 'src/common/enums';
+import { UserRole } from '../../common/enums';
 import { Exclude } from 'class-transformer';
 
 @Entity('users')
@@ -35,7 +35,11 @@ export class User extends BaseEntity {
   @MinLength(2)
   fullName: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.Viewer })
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.Viewer,
+  })
   @IsEnum(UserRole)
   role: UserRole;
 

@@ -1,9 +1,7 @@
 import { Module, Global } from '@nestjs/common';
-import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { ResponseInterceptor } from './interceptors/response.interceptor';
 import { CustomHttpExceptionFilter } from './filters/custom-http-exception.filter';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../database/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';

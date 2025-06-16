@@ -16,11 +16,10 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto';
 import { ResponseBuilder } from '../../common/utils/response-builder';
-import { ApiResponse } from 'src/common/interfaces/api-response.interface';
+import { ApiResponseInterface } from 'src/common/interfaces/api-response.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('Authentication')
-@ApiBearerAuth()
 @Controller({
   path: 'auth',
   version: '1',
@@ -48,7 +47,7 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() registerDto: RegisterDto,
-  ): Promise<ApiResponse<AuthResponseDto>> {
+  ): Promise<ApiResponseInterface<AuthResponseDto>> {
     const data = await this.authService.register(registerDto);
 
     return ResponseBuilder.success(
@@ -84,7 +83,7 @@ export class AuthController {
   })
   async login(
     @Body() loginDto: LoginDto,
-  ): Promise<ApiResponse<AuthResponseDto>> {
+  ): Promise<ApiResponseInterface<AuthResponseDto>> {
     const data = await this.authService.login(loginDto);
 
     return ResponseBuilder.success(data, 'Login successful', HttpStatus.OK);

@@ -1,12 +1,5 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  BeforeInsert,
-  Index,
-} from 'typeorm';
+import { Entity, Column, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import * as bcrypt from 'bcrypt';
 import {
   IsEnum,
   IsEmail,
@@ -16,6 +9,7 @@ import {
 } from 'class-validator';
 import { UserRole } from '../../common/enums';
 import { Exclude } from 'class-transformer';
+import { Document } from './document.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -46,4 +40,10 @@ export class User extends BaseEntity {
   @Column({ default: true })
   @IsBoolean()
   isActive: boolean;
+
+  @OneToMany(() => Document, (document) => document.user, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  documents: Document[];
 }

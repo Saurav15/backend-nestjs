@@ -1,38 +1,33 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IngestionStatus } from '../../../common/enums/ingestion-status.enum';
-import { UserResponseDto } from '../../user/dto/user-response.dto';
+import { IngestionStatus } from 'src/common/enums/ingestion-status.enum';
+import { Document } from 'src/database/entities/document.entity';
 
 export class DocumentResponseDto {
   @ApiProperty({
-    description: 'The unique identifier of the document',
+    description: 'Unique identifier of the document',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   id: string;
 
   @ApiProperty({
     description: 'Title of the document',
-    example: 'Annual Report 2023',
+    example: 'Project Proposal',
   })
   title: string;
 
   @ApiProperty({
     description: 'URL to the raw document in S3',
-    example: 'https://s3.amazonaws.com/bucket/path/to/document.pdf',
+    example: 'https://example.com/presigned-url',
+    required: false,
   })
   s3Url: string;
 
   @ApiProperty({
     description: 'URL to processed data in S3 (post-ingestion)',
-    example: 'https://s3.amazonaws.com/bucket/path/to/processed-data.json',
+    example: 'https://example.com/processed-data',
     required: false,
   })
-  processedDataUrl: string;
-
-  @ApiProperty({
-    description: 'The user who uploaded the document',
-    type: UserResponseDto,
-  })
-  user: UserResponseDto;
+  processedDataUrl?: string;
 
   @ApiProperty({
     description: 'Current status of the document ingestion',
@@ -42,14 +37,26 @@ export class DocumentResponseDto {
   status: IngestionStatus;
 
   @ApiProperty({
-    description: 'The date when the document was created',
-    example: '2024-01-01T00:00:00.000Z',
+    description: 'Creation timestamp',
+    example: '2024-03-20T10:00:00Z',
   })
   createdAt: Date;
 
   @ApiProperty({
-    description: 'The date when the document was last updated',
-    example: '2024-01-01T00:00:00.000Z',
+    description: 'Last update timestamp',
+    example: '2024-03-20T10:00:00Z',
   })
   updatedAt: Date;
+
+  constructor(document: Document & { s3Url: string }) {
+    if (!document) return;
+
+    this.id = document.id;
+    this.title = document.title;
+    this.s3Url = document.s3Url;
+    this.processedDataUrl = document.processedDataUrl;
+    this.status = document.status;
+    this.createdAt = document.createdAt;
+    this.updatedAt = document.updatedAt;
+  }
 }

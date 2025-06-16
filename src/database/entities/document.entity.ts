@@ -21,7 +21,7 @@ export class Document extends BaseEntity {
 
   @Column()
   @IsUrl()
-  s3Url: string; // URL to the raw document in S3
+  s3Key: string; // URL to the raw document in S3
 
   @Column({ nullable: true })
   @IsUrl()

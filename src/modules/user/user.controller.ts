@@ -41,7 +41,7 @@ export class UserController {
 
   @Get()
   @Version('1')
-  @Roles(UserRole.Admin)
+  @Roles([UserRole.Admin])
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get all users',
@@ -84,7 +84,7 @@ export class UserController {
 
   @Get(':id')
   @Version('1')
-  @Roles(UserRole.Admin)
+  @Roles([UserRole.Admin])
   @ApiOperation({
     summary: 'Get user by ID',
     description: 'Retrieves a user profile by their unique identifier',
@@ -110,7 +110,7 @@ export class UserController {
 
   @Patch(':id/role')
   @Version('1')
-  @Roles(UserRole.Admin)
+  @Roles([UserRole.Admin])
   @ApiOperation({
     summary: 'Update user role',
     description: 'Updates the role of a user. Only accessible by admin users.',

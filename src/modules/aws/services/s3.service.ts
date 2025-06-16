@@ -10,6 +10,8 @@ import {
 import { Readable } from 'stream';
 import { IS3Service } from '../interfaces/s3.interface';
 import { EnvironmentVariables } from 'src/config/config.validation';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 @Injectable()
 export class S3Service implements IS3Service {
   private readonly s3Client: S3Client;
@@ -43,13 +45,13 @@ export class S3Service implements IS3Service {
       });
 
       await this.s3Client.send(command);
-      return this.getFileUrl(key);
+      return key;
     } catch (error) {
       this.logger.error(
         `Failed to upload file to S3: ${error.message}`,
         error.stack,
       );
-      throw new Error(`Failed to upload file to S3: ${error.message}`);
+      throw error;
     }
   }
 
@@ -116,7 +118,20 @@ export class S3Service implements IS3Service {
     }
   }
 
-  private getFileUrl(key: string): string {
-    return `https://${this.bucket}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${key}`;
+  async getPresignedUrl(key: string, expiresIn: number = 300): Promise<string> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      return await getSignedUrl(this.s3Client, command, { expiresIn });
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate presigned URL: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 }

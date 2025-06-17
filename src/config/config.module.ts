@@ -8,6 +8,12 @@ import { validateSync } from 'class-validator';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || 'development'}.local`,
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env.local',
+        '.env',
+      ],
       validate: (config) => {
         const validatedConfig = plainToClass(EnvironmentVariables, config, {
           enableImplicitConversion: true,
@@ -18,6 +24,7 @@ import { validateSync } from 'class-validator';
         }
         return validatedConfig;
       },
+      cache: true,
     }),
   ],
 })

@@ -1,126 +1,234 @@
-# NestJS Backend Application
+# NestJS Document Management System
 
-## Description
+A robust document management system built with NestJS, featuring document upload, processing, and management capabilities.
 
-A NestJS backend application with TypeORM, PostgreSQL, and authentication features.
+## 🚀 Features
 
-## Prerequisites
+- **Document Management**
+
+  - Upload documents to AWS S3
+  - Process documents through RabbitMQ queue
+  - Track document status and metadata
+  - Search and filter documents
+
+- **User Management**
+
+  - Role-based access control (Admin, Editor, Viewer)
+  - JWT authentication
+  - User profile management
+
+- **Security Features**
+
+  - Rate limiting
+  - API versioning
+  - JWT authentication
+  - Role-based guards
+
+- **Infrastructure**
+  - PostgreSQL database
+  - RabbitMQ message queue
+  - AWS S3 integration
+  - Docker containerization
+
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── config/                 # Configuration files
+│   │   ├── database.config.ts  # Database connection and TypeORM settings
+│   │   ├── aws.config.ts       # AWS S3 bucket and credentials configuration
+│   │   └── rabbitmq.config.ts  # RabbitMQ connection and queue settings
+│   │
+│   ├── modules/
+│   │   ├── auth/              # Authentication module
+│   │   ├── users/             # User management
+│   │   ├── documents/         # Document management
+│   │   └── common/            # Shared utilities
+│   │
+│   ├── database/
+│   │   ├── migrations/        # Database migrations
+│   │   └── seeds/            # Database seeders
+│   │
+│   └── main.ts             # Application entry point
+│
+├── test/                     # Test files
+├── docker/                   # Docker configuration
+├── .env.example             # Environment variables template
+└── docker-compose.yml       # Docker compose configuration
+```
+
+## 🛠️ Prerequisites
 
 - Node.js (v16 or higher)
+- Docker and Docker Compose
+- AWS Account (for S3)
 - PostgreSQL
-- npm or yarn
+- RabbitMQ
 
-## Installation
+## 🚀 Getting Started
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>
+   ```
+
+2. **Environment Setup**
+
+   ```bash
+   # Copy environment file
+   cp .env.example .env
+
+   # Edit .env with your configuration
+   nano .env
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+4. **Database Setup**
+
+   ```bash
+   # Run migrations
+   npm run migration:run
+
+   # Seed initial data
+   npm run seed:users
+   ```
+
+5. **Start the application**
+
+   Development:
+
+   ```bash
+   # Using Docker
+   docker-compose -f docker-compose.dev.yml up
+
+   # Without Docker
+   npm run start:dev
+   ```
+
+   Production:
+
+   ```bash
+   # Using Docker
+   docker-compose up
+
+   # Without Docker
+   npm run build
+   npm run start:prod
+   ```
+
+## 📚 API Documentation
+
+Swagger documentation is available at:
+
+```
+http://localhost:3000/api/docs
+```
+
+## 🔒 Security Features
+
+### Rate Limiting
+
+- Global rate limiting applied to all routes
+- Configurable limits per endpoint
+- IP-based tracking
+
+### API Versioning
+
+- URL-based versioning (e.g., `/v1/users`)
+- Header-based versioning support
+- Default version: v1
+
+### Authentication
+
+- JWT-based authentication
+- Role-based access control
+- Token refresh mechanism
+
+## 📦 Docker Support
+
+### Development
 
 ```bash
-# Install dependencies
-npm install
+# Build and start
+docker-compose -f docker-compose.dev.yml up
+
+# Rebuild without cache
+docker-compose -f docker-compose.dev.yml build --no-cache
 ```
 
-## Environment Setup
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-NODE_ENV=development
-PORT=3000
-
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-DB_DATABASE=your_database_name
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRATION=1d
-```
-
-## Database Migrations
-
-### Generating Migrations
-
-To generate a new migration, use the following command:
+### Production
 
 ```bash
-npm run migration:generate --name=YourMigrationName
+# Build and start
+docker-compose up
+
+# Rebuild without cache
+docker-compose build --no-cache
 ```
 
-For example:
-
-```bash
-npm run migration:generate --name=CreateUsersTable
-```
-
-The migration file will be created in the `src/database/migrations` directory.
-
-### Running Migrations
-
-To run all pending migrations:
-
-```bash
-npm run migration:run
-```
-
-### Reverting Migrations
-
-To revert the last migration:
-
-```bash
-npm run migration:revert
-```
-
-### Migration Best Practices
-
-1. Always use descriptive names for migrations
-2. Use PascalCase or camelCase for migration names
-3. Each migration should be focused on a single change
-4. Test migrations in development before applying to production
-5. Keep migrations in version control
-
-## Running the Application
-
-```bash
-# Development
-npm run start:dev
-
-# Production
-npm run build
-npm run start:prod
-```
-
-## Project Structure
-
-```
-src/
-├── config/             # Configuration files
-├── database/          # Database related files
-│   ├── config/       # Database configuration
-│   ├── migrations/   # Database migrations
-│   └── entities/     # Database entities
-├── modules/          # Application modules
-│   └── auth/        # Authentication module
-└── common/          # Common utilities and enums
-```
-
-## API Documentation
-
-API documentation will be available at `/api` when running the application.
-
-## Testing
+## 🧪 Testing
 
 ```bash
 # Unit tests
 npm run test
 
-# e2e tests
-npm run test:e2e
-
 # Test coverage
 npm run test:cov
 ```
 
-## License
+## 📝 Database Migrations
 
-This project is licensed under the MIT License.
+### Create Migration
+
+```bash
+npm run migration:generate --name=added-ingetionlogs
+```
+
+### Run Migrations
+
+```bash
+npm run migration:run
+```
+
+### Revert Migration
+
+```bash
+npm run migration:revert
+```
+
+## 🌱 Database Seeding
+
+### Run Seeders
+
+```bash
+# Run all seeders
+npm run seed:run
+
+# Run specific seeder
+npm run seed:run -- --seed=UserSeeder
+```
+
+## 📤 AWS S3 Integration
+
+- Document storage in S3 buckets
+- Configurable bucket and region
+- Secure file upload/download
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

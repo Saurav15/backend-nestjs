@@ -43,13 +43,51 @@ A robust document management system built with NestJS, featuring document upload
 │   │   ├── auth/              # Authentication module
 │   │   ├── users/             # User management
 │   │   ├── documents/         # Document management
-│   │   └── common/            # Shared utilities
+│   │   │
+│   │   └── common/            # Shared utilities and middleware
+│   │       ├── decorators/    # Custom decorators
+│   │       │   ├── roles.decorator.ts        # Role-based access decorator
+│   │       │   ├── public.decorator.ts       # Public route decorator
+│   │       │   └── current-user.decorator.ts # Current user decorator
+│   │       │
+│   │       ├── filters/       # Exception filters
+│   │       │   ├── http-exception.filter.ts  # Global HTTP exception handler
+│   │       │   ├── validation.filter.ts      # Validation error handler
+│   │       │   └── all-exceptions.filter.ts  # Catch-all exception handler
+│   │       │
+│   │       ├── guards/        # Shared guards
+│   │       │   ├── jwt-auth.guard.ts        # JWT authentication guard
+│   │       │   ├── roles.guard.ts           # Role-based access guard
+│   │       │   └── rate-limit.guard.ts      # Rate limiting guard
+│   │       │
+│   │       ├── interceptors/  # Request/Response interceptors
+│   │       │   ├── transform.interceptor.ts  # Response transformation
+│   │       │   ├── logging.interceptor.ts    # Request logging
+│   │       │   └── timeout.interceptor.ts    # Request timeout handling
+│   │       │
+│   │       ├── pipes/         # Custom validation pipes
+│   │       │   ├── validation.pipe.ts        # Request validation
+│   │       │   ├── parse-int.pipe.ts         # Integer parsing
+│   │       │   └── parse-float.pipe.ts       # Float parsing
+│   │       │
+│   │       ├── interfaces/    # Shared interfaces
+│   │       │   ├── pagination.interface.ts   # Pagination interface
+│   │       │   └── response.interface.ts     # API response interface
+│   │       │
+│   │       ├── constants/     # Shared constants
+│   │       │   ├── error-messages.ts         # Error message constants
+│   │       │   └── success-messages.ts       # Success message constants
+│   │       │
+│   │       └── utils/         # Utility functions
+│   │           ├── date.util.ts              # Date manipulation utilities
+│   │           ├── string.util.ts            # String manipulation utilities
+│   │           └── validation.util.ts        # Validation utilities
 │   │
 │   ├── database/
 │   │   ├── migrations/        # Database migrations
 │   │   └── seeds/            # Database seeders
 │   │
-│   └── main.ts             # Application entry point
+│   └── main.ts               # Application entry point
 │
 ├── test/                     # Test files
 ├── docker/                   # Docker configuration

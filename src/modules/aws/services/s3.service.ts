@@ -6,6 +6,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  ListBucketsCommand,
 } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { IS3Service } from '../interfaces/s3.interface';
@@ -129,6 +130,19 @@ export class S3Service implements IS3Service {
     } catch (error) {
       this.logger.error(
         `Failed to generate presigned URL: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async listBuckets(): Promise<void> {
+    try {
+      const command = new ListBucketsCommand({});
+      await this.s3Client.send(command);
+    } catch (error) {
+      this.logger.error(
+        `Failed to list S3 buckets: ${error.message}`,
         error.stack,
       );
       throw error;

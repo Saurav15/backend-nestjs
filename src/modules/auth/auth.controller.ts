@@ -4,13 +4,12 @@ import {
   Body,
   HttpStatus,
   Version,
-  UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse as SwaggerApiResponse,
-  ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -18,12 +17,14 @@ import { RegisterDto, LoginDto } from './dto';
 import { ResponseBuilder } from '../../common/utils/response-builder';
 import { ApiResponseInterface } from 'src/common/interfaces/api-response.interface';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller({
   path: 'auth',
   version: '1',
 })
+@Throttle({ default: { limit: 5, ttl: 60000 } })
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -81,6 +82,7 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input data - Email or password format is invalid',
   })
+  @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
   ): Promise<ApiResponseInterface<AuthResponseDto>> {

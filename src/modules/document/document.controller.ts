@@ -38,6 +38,7 @@ import { User } from 'src/common/decorators/user.decorator';
 import { User as UserEntity } from 'src/database/entities/user.entity';
 import { ListDocumentsDto } from './dto/list-documents.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Documents')
 @Controller({

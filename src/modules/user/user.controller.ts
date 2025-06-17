@@ -29,6 +29,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { ResponseBuilder } from 'src/common/utils/response-builder';
 import { ApiResponseInterface } from '../../common/interfaces/api-response.interface';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Users')
 @Controller({
@@ -36,6 +37,7 @@ import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
   version: '1',
 })
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

@@ -1,6 +1,6 @@
-# NestJS Document Management System
+# NestJS Backend Service
 
-A robust document management system built with NestJS, featuring document upload, processing, and management capabilities.
+A robust backend service for document management built with NestJS, featuring document upload, processing, and management capabilities.
 
 ## 🚀 Features
 
@@ -35,64 +35,39 @@ A robust document management system built with NestJS, featuring document upload
 ```
 ├── src/
 │   ├── config/                 # Configuration files
-│   │   ├── database.config.ts  # Database connection and TypeORM settings
-│   │   ├── aws.config.ts       # AWS S3 bucket and credentials configuration
-│   │   └── rabbitmq.config.ts  # RabbitMQ connection and queue settings
+│   │   ├── config.module.ts    # NestJS configuration module
+│   │   ├── config.validation.ts # Environment validation
+│   │   └── swagger.config.ts   # Swagger documentation config
 │   │
-│   ├── modules/
-│   │   ├── auth/              # Authentication module
-│   │   ├── users/             # User management
-│   │   ├── documents/         # Document management
-│   │   │
-│   │   └── common/            # Shared utilities and middleware
-│   │       ├── decorators/    # Custom decorators
-│   │       │   ├── roles.decorator.ts        # Role-based access decorator
-│   │       │   ├── public.decorator.ts       # Public route decorator
-│   │       │   └── current-user.decorator.ts # Current user decorator
-│   │       │
-│   │       ├── filters/       # Exception filters
-│   │       │   ├── http-exception.filter.ts  # Global HTTP exception handler
-│   │       │   ├── validation.filter.ts      # Validation error handler
-│   │       │   └── all-exceptions.filter.ts  # Catch-all exception handler
-│   │       │
-│   │       ├── guards/        # Shared guards
-│   │       │   ├── jwt-auth.guard.ts        # JWT authentication guard
-│   │       │   ├── roles.guard.ts           # Role-based access guard
-│   │       │   └── rate-limit.guard.ts      # Rate limiting guard
-│   │       │
-│   │       ├── interceptors/  # Request/Response interceptors
-│   │       │   ├── transform.interceptor.ts  # Response transformation
-│   │       │   ├── logging.interceptor.ts    # Request logging
-│   │       │   └── timeout.interceptor.ts    # Request timeout handling
-│   │       │
-│   │       ├── pipes/         # Custom validation pipes
-│   │       │   ├── validation.pipe.ts        # Request validation
-│   │       │   ├── parse-int.pipe.ts         # Integer parsing
-│   │       │   └── parse-float.pipe.ts       # Float parsing
-│   │       │
-│   │       ├── interfaces/    # Shared interfaces
-│   │       │   ├── pagination.interface.ts   # Pagination interface
-│   │       │   └── response.interface.ts     # API response interface
-│   │       │
-│   │       ├── constants/     # Shared constants
-│   │       │   ├── error-messages.ts         # Error message constants
-│   │       │   └── success-messages.ts       # Success message constants
-│   │       │
-│   │       └── utils/         # Utility functions
-│   │           ├── date.util.ts              # Date manipulation utilities
-│   │           ├── string.util.ts            # String manipulation utilities
-│   │           └── validation.util.ts        # Validation utilities
+│   ├── common/                 # Shared utilities and middleware
+│   │   ├── decorators/         # Custom decorators
+│   │   ├── enums/             # Enum definitions
+│   │   ├── filters/           # Exception filters
+│   │   ├── guards/            # Authentication and authorization guards
+│   │   ├── interceptors/      # Request/Response interceptors
+│   │   ├── interfaces/        # Shared interfaces
+│   │   └── utils/             # Utility functions
 │   │
-│   ├── database/
+│   ├── database/              # Database configuration
+│   │   ├── config/            # TypeORM configuration
+│   │   ├── entities/          # Database entities
 │   │   ├── migrations/        # Database migrations
-│   │   └── seeds/            # Database seeders
+│   │   └── seeders/           # Database seeders
 │   │
-│   └── main.ts               # Application entry point
+│   ├── modules/               # Application modules
+│   │   ├── auth/              # Authentication module
+│   │   ├── user/              # User management
+│   │   ├── document/          # Document management
+│   │   ├── aws/               # AWS S3 integration
+│   │   └── health/            # Health checks
+│   │
+│   └── main.ts                # Application entry point
 │
-├── test/                     # Test files
-├── docker/                   # Docker configuration
-├── .env.example             # Environment variables template
-└── docker-compose.yml       # Docker compose configuration
+├── test/                      # Test files
+├── Dockerfile                 # Production Docker configuration
+├── Dockerfile.dev             # Development Docker configuration
+├── entrypoint.sh              # Container entrypoint script
+└── package.json               # Dependencies and scripts
 ```
 
 ## 🛠️ Prerequisites
@@ -105,61 +80,179 @@ A robust document management system built with NestJS, featuring document upload
 
 ## 🚀 Getting Started
 
-1. **Clone the repository**
+### 1. **Clone the Repository**
 
-   ```bash
-   git clone <repository-url>
-   cd <project-directory>
-   ```
+```bash
+git clone https://github.com/your-username/jk-tech-assignment.git
+cd jk-tech-assignment/backend
+```
 
-2. **Environment Setup**
+### 2. **Environment Setup**
 
-   ```bash
-   # Copy environment file
-   cp .env.example .env
+The application uses different environment files based on `NODE_ENV`:
 
-   # Edit .env with your configuration
-   nano .env
-   ```
+- **Development**: `.env.development.local` → `.env.development` → `.env.local` → `.env`
+- **Production**: `.env.production.local` → `.env.production` → `.env.local` → `.env`
 
-3. **Install dependencies**
+#### Create Environment Files
 
-   ```bash
-   npm install
-   ```
+```bash
+# Development environment
+cp .env.example .env.development.local
+# Edit with your development configuration
+nano .env.development.local
 
-4. **Database Setup**
+# Production environment
+cp .env.example .env.production.local
+# Edit with your production configuration
+nano .env.production.local
+```
 
-   ```bash
-   # Run migrations
-   npm run migration:run
+#### Required Environment Variables
 
-   # Seed initial data
-   npm run seed:users
-   ```
+```bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your-username
+DB_PASSWORD=your-password
+DB_DATABASE=your-database
 
-5. **Start the application**
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=24h
 
-   Development:
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_S3_BUCKET=your-s3-bucket-name
 
-   ```bash
-   # Using Docker
-   docker-compose -f docker-compose.dev.yml up
+# RabbitMQ Configuration
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
+RABBITMQ_QUEUE=documents_queue
+```
 
-   # Without Docker
-   npm run start:dev
-   ```
+### 3. **Install Dependencies**
 
-   Production:
+```bash
+npm install
+```
 
-   ```bash
-   # Using Docker
-   docker-compose up
+### 4. **Database Setup**
 
-   # Without Docker
-   npm run build
-   npm run start:prod
-   ```
+#### Manual Migration Execution
+
+```bash
+# Development migrations
+npm run migration:run:dev
+
+# Production migrations
+npm run migration:run:prod
+```
+
+#### Database Seeding
+
+```bash
+# Run seeders
+npm run seed
+```
+
+### 5. **Start the Application**
+
+#### Local Development
+
+```bash
+# Development mode
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start:prod
+```
+
+## 📦 Docker Deployment
+
+### Option 1: Full Microservices Stack (Recommended)
+
+If you want to run the complete application with all microservices (backend, database, RabbitMQ, Python consumer), use the root repository's docker-compose:
+
+```bash
+# Navigate to the root repository
+cd jk-tech-assignment
+
+# Development environment
+docker-compose -f docker-compose.dev.yml up
+
+# Production environment
+docker-compose up
+```
+
+The root repository contains:
+
+- `docker-compose.dev.yml` - Development setup with all services
+- `docker-compose.yml` - Production setup with all services
+
+### Option 2: Standalone Backend Service
+
+If you only want to build and run the backend service independently:
+
+#### Building the Docker Image
+
+```bash
+# Build for development
+docker build -t jk-tech-backend:dev --build-arg NODE_ENV=development .
+
+# Build for production
+docker build -t jk-tech-backend:prod --build-arg NODE_ENV=production .
+```
+
+**Note:** The `--build-arg NODE_ENV` is used for build-time defaults, but the actual `NODE_ENV` at runtime will be determined by:
+
+- Environment variables passed via `--env-file`
+- Environment variables set in docker-compose
+- Environment variables passed via `-e` flags
+- Defaults to `development` if not specified
+
+#### Running the Docker Container
+
+```bash
+# Run development container
+docker run -d \
+  --name jk-tech-backend-dev \
+  -p 3000:3000 \
+  --env-file .env.development.local \
+  jk-tech-backend:dev
+
+# Run production container
+docker run -d \
+  --name jk-tech-backend-prod \
+  -p 3000:3000 \
+  --env-file .env.production.local \
+  jk-tech-backend:prod
+```
+
+### Automatic Migration Execution
+
+The application uses an entrypoint script (`entrypoint.sh`) that automatically runs migrations on container startup:
+
+1. **Detects the environment** based on `NODE_ENV`
+2. **Runs the appropriate migration command**:
+   - `npm run migration:run:dev` for development
+   - `npm run migration:run:prod` for production
+3. **Provides clear logging** of which environment and migration is being executed
+4. **Handles fallback** to development if `NODE_ENV` is not set
+
+Example output:
+
+```bash
+🛠 Running migrations for NODE_ENV: development
+🔧 Running development migrations...
+🚀 Starting app: node dist/main
+```
 
 ## 📚 API Documentation
 
@@ -189,50 +282,22 @@ http://localhost:3000/api/docs
 - Role-based access control
 - Token refresh mechanism
 
-## 📦 Docker Support
-
-### Development
-
-```bash
-# Build and start
-docker-compose -f docker-compose.dev.yml up
-
-# Rebuild without cache
-docker-compose -f docker-compose.dev.yml build --no-cache
-```
-
-### Production
-
-```bash
-# Build and start
-docker-compose up
-
-# Rebuild without cache
-docker-compose build --no-cache
-```
-
-## 🧪 Testing
-
-```bash
-# Unit tests
-npm run test
-
-# Test coverage
-npm run test:cov
-```
-
 ## 📝 Database Migrations
 
 ### Create Migration
 
 ```bash
-npm run migration:generate --name=added-ingetionlogs
+npm run migration:generate --name=your-migration-name
 ```
 
-### Run Migrations
+### Run Migrations Manually
 
 ```bash
-npm run migration:run
+# Development migrations
+npm run migration:run:dev
+
+# Production migrations
+npm run migration:run:prod
 ```
 
 ### Revert Migration
@@ -247,10 +312,20 @@ npm run migration:revert
 
 ```bash
 # Run all seeders
-npm run seed:run
+npm run seed
+```
 
-# Run specific seeder
-npm run seed:run -- --seed=UserSeeder
+## 🧪 Testing
+
+```bash
+# Unit tests
+npm run test
+
+# Test coverage
+npm run test:cov
+
+# E2E tests
+npm run test:e2e
 ```
 
 ## 📤 AWS S3 Integration

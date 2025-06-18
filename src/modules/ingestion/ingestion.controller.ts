@@ -2,8 +2,8 @@ import {
   Controller,
   Post,
   Get,
-  Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -23,6 +23,10 @@ import { User } from '../../common/decorators/user.decorator';
 import { ResponseBuilder } from '../../common/utils/response-builder';
 import { IngestionService } from './ingestion.service';
 import { IngestionResponseDto, IngestionDataResponseDto } from './dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
+import { ApiResponseInterface } from '../../common/interfaces/api-response.interface';
+import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 
 @ApiTags('Ingestion')
 @Controller({
@@ -87,9 +91,9 @@ export class IngestionController {
   @Get('logs/:documentId')
   @Roles([UserRole.Editor, UserRole.Admin])
   @ApiOperation({
-    summary: 'Get all ingestion logs and document status for a document',
+    summary: 'Get paginated ingestion logs and document status for a document',
     description:
-      'Retrieves all ingestion log entries and current document status for a specific document. Only accessible by the document owner.',
+      'Retrieves paginated ingestion log entries and current document status for a specific document. Logs are ordered by attempt ID (descending) and creation time (descending). Only accessible by the document owner.',
   })
   @ApiParam({
     name: 'documentId',
@@ -120,10 +124,15 @@ export class IngestionController {
   async getIngestionData(
     @Param('documentId') documentId: string,
     @User('id') userId: string,
-  ): Promise<any> {
+    @Query() paginationDto: PaginationDto,
+  ): Promise<
+    ApiResponseInterface<PaginatedResponseDto<IngestionDataResponseDto>>
+  > {
     const result = await this.ingestionService.getIngestionData(
       documentId,
       userId,
+      paginationDto.page || 1,
+      paginationDto.limit || 10,
     );
     return ResponseBuilder.success(
       result,

@@ -20,6 +20,7 @@ describe('IngestionService', () => {
     find: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    count: jest.fn(),
     manager: {
       connection: {
         createQueryRunner: jest.fn(),
@@ -92,42 +93,109 @@ describe('IngestionService', () => {
   });
 
   describe('startIngestion', () => {
-    const documentId = 'document-id';
-    const mockDocument = {
-      id: 'document-id',
-      status: IngestionStatus.PENDING,
-      user: { id: 'user-id' },
-    };
-
-    const mockIngestionLog = {
-      id: 'log-id',
-      document: { id: 'document-id' },
-      status: IngestionStatus.STARTED,
-      details: 'Document ingestion process started',
-      error: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
     it('should start ingestion successfully', async () => {
-      // Arrange
-      mockDocumentRepository.findOne.mockResolvedValue(mockDocument);
-      mockIngestionLogRepository.findOne.mockResolvedValue(null);
-      mockQueryRunner.manager.save.mockResolvedValue(mockIngestionLog);
+      const documentId = 'test-doc-id';
+      const userId = 'test-user-id';
+      const mockDocument = {
+        id: documentId,
+        status: IngestionStatus.PENDING,
+        user: { id: userId },
+      } as Document;
 
-      // Act
-      const result = await service.startIngestion(documentId, 'user-id');
+      const mockIngestionLog = {
+        id: 'log-id',
+        document: { id: documentId },
+        attemptId: 1,
+        status: IngestionStatus.STARTED,
+        details: 'Document ingestion process started',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as IngestionLog;
 
-      // Assert
+      jest
+        .spyOn(service['documentRepository'], 'findOne')
+        .mockResolvedValue(mockDocument);
+      jest
+        .spyOn(service['ingestionLogRepository'], 'findOne')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(service['ingestionLogRepository'], 'count')
+        .mockResolvedValue(0);
+      jest
+        .spyOn(
+          service['documentRepository'].manager.connection,
+          'createQueryRunner',
+        )
+        .mockReturnValue({
+          connect: jest.fn(),
+          startTransaction: jest.fn(),
+          manager: {
+            update: jest.fn(),
+            create: jest.fn().mockReturnValue(mockIngestionLog),
+            save: jest.fn().mockResolvedValue(mockIngestionLog),
+          },
+          commitTransaction: jest.fn(),
+          rollbackTransaction: jest.fn(),
+          release: jest.fn(),
+        } as any);
+
+      const result = await service.startIngestion(documentId, userId);
+
       expect(result).toBeInstanceOf(IngestionResponseDto);
       expect(result.id).toBe(mockIngestionLog.id);
-      expect(result.documentId).toBe(mockIngestionLog.document.id);
-      expect(result.status).toBe(mockIngestionLog.status);
-      expect(mockQueryRunner.manager.update).toHaveBeenCalledWith(
-        Document,
-        'document-id',
-        { status: IngestionStatus.STARTED },
-      );
+      expect(result.attemptId).toBe(1);
+      expect(result.status).toBe(IngestionStatus.STARTED);
+    });
+
+    it('should increment attempt ID for subsequent attempts', async () => {
+      const documentId = 'test-doc-id';
+      const userId = 'test-user-id';
+      const mockDocument = {
+        id: documentId,
+        status: IngestionStatus.PENDING,
+        user: { id: userId },
+      } as Document;
+
+      const mockIngestionLog = {
+        id: 'log-id',
+        document: { id: documentId },
+        attemptId: 3,
+        status: IngestionStatus.STARTED,
+        details: 'Document ingestion process started',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as IngestionLog;
+
+      jest
+        .spyOn(service['documentRepository'], 'findOne')
+        .mockResolvedValue(mockDocument);
+      jest
+        .spyOn(service['ingestionLogRepository'], 'findOne')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(service['ingestionLogRepository'], 'count')
+        .mockResolvedValue(2);
+      jest
+        .spyOn(
+          service['documentRepository'].manager.connection,
+          'createQueryRunner',
+        )
+        .mockReturnValue({
+          connect: jest.fn(),
+          startTransaction: jest.fn(),
+          manager: {
+            update: jest.fn(),
+            create: jest.fn().mockReturnValue(mockIngestionLog),
+            save: jest.fn().mockResolvedValue(mockIngestionLog),
+          },
+          commitTransaction: jest.fn(),
+          rollbackTransaction: jest.fn(),
+          release: jest.fn(),
+        } as any);
+
+      const result = await service.startIngestion(documentId, userId);
+
+      expect(result.attemptId).toBe(3);
     });
 
     it('should throw NotFoundException when document not found', async () => {
@@ -136,37 +204,46 @@ describe('IngestionService', () => {
 
       // Act & Assert
       await expect(
-        service.startIngestion(documentId, 'user-id'),
+        service.startIngestion('document-id', 'user-id'),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException when user does not own document', async () => {
       // Arrange
-      mockDocumentRepository.findOne.mockResolvedValue(mockDocument);
+      mockDocumentRepository.findOne.mockResolvedValue({
+        id: 'document-id',
+        status: IngestionStatus.PENDING,
+        user: { id: 'different-user-id' },
+      });
 
       // Act & Assert
       await expect(
-        service.startIngestion(documentId, 'different-user-id'),
+        service.startIngestion('document-id', 'different-user-id'),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when document status is not PENDING', async () => {
       // Arrange
       const documentWithWrongStatus = {
-        ...mockDocument,
+        id: 'document-id',
         status: IngestionStatus.COMPLETED,
+        user: { id: 'user-id' },
       };
       mockDocumentRepository.findOne.mockResolvedValue(documentWithWrongStatus);
 
       // Act & Assert
       await expect(
-        service.startIngestion(documentId, 'user-id'),
+        service.startIngestion('document-id', 'user-id'),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when ingestion is already in progress', async () => {
       // Arrange
-      mockDocumentRepository.findOne.mockResolvedValue(mockDocument);
+      mockDocumentRepository.findOne.mockResolvedValue({
+        id: 'document-id',
+        status: IngestionStatus.STARTED,
+        user: { id: 'user-id' },
+      });
       mockIngestionLogRepository.findOne.mockResolvedValue({
         id: 'existing-log',
         status: IngestionStatus.STARTED,
@@ -174,7 +251,7 @@ describe('IngestionService', () => {
 
       // Act & Assert
       await expect(
-        service.startIngestion(documentId, 'user-id'),
+        service.startIngestion('document-id', 'user-id'),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -206,6 +283,7 @@ describe('IngestionService', () => {
       // Arrange
       mockDocumentRepository.findOne.mockResolvedValue(mockDocument);
       mockIngestionLogRepository.find.mockResolvedValue(mockLogs);
+      mockIngestionLogRepository.count.mockResolvedValue(1);
       mockS3Service.getPresignedUrl.mockResolvedValue(
         'https://example.com/presigned-url',
       );
@@ -214,12 +292,17 @@ describe('IngestionService', () => {
       const result = await service.getIngestionData('document-id', 'user-id');
 
       // Assert
-      expect(result).toBeInstanceOf(IngestionDataResponseDto);
-      expect(result.document.id).toBe(mockDocument.id);
-      expect(result.document.title).toBe(mockDocument.title);
-      expect(result.ingestionLogs).toHaveLength(1);
-      expect(result.ingestionLogs[0]).toBeInstanceOf(IngestionResponseDto);
-      expect(result.ingestionLogs[0].id).toBe(mockLogs[0].id);
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('meta');
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toBeInstanceOf(IngestionDataResponseDto);
+      expect(result.data[0].document.id).toBe(mockDocument.id);
+      expect(result.data[0].document.title).toBe(mockDocument.title);
+      expect(result.data[0].ingestionLogs).toHaveLength(1);
+      expect(result.data[0].ingestionLogs[0]).toBeInstanceOf(
+        IngestionResponseDto,
+      );
+      expect(result.data[0].ingestionLogs[0].id).toBe(mockLogs[0].id);
       expect(mockS3Service.getPresignedUrl).toHaveBeenCalledWith(
         mockDocument.s3Key,
       );
@@ -243,6 +326,64 @@ describe('IngestionService', () => {
       await expect(
         service.getIngestionData('document-id', 'different-user-id'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateIngestionLog', () => {
+    it('should update ingestion log successfully', async () => {
+      const documentId = 'test-doc-id';
+      const status = IngestionStatus.COMPLETED;
+      const details = 'Document processed successfully';
+
+      const mockDocument = {
+        id: documentId,
+      } as Document;
+
+      const mockIngestionLog = {
+        id: 'log-id',
+        document: { id: documentId },
+        attemptId: 2,
+        status,
+        details,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as IngestionLog;
+
+      jest
+        .spyOn(service['documentRepository'], 'findOne')
+        .mockResolvedValue(mockDocument);
+      jest
+        .spyOn(service['ingestionLogRepository'], 'count')
+        .mockResolvedValue(1);
+      jest
+        .spyOn(
+          service['documentRepository'].manager.connection,
+          'createQueryRunner',
+        )
+        .mockReturnValue({
+          connect: jest.fn(),
+          startTransaction: jest.fn(),
+          manager: {
+            update: jest.fn(),
+            create: jest.fn().mockReturnValue(mockIngestionLog),
+            save: jest.fn().mockResolvedValue(mockIngestionLog),
+          },
+          commitTransaction: jest.fn(),
+          rollbackTransaction: jest.fn(),
+          release: jest.fn(),
+        } as any);
+
+      const result = await service.updateIngestionLog(
+        documentId,
+        status,
+        details,
+      );
+
+      expect(result).toBeInstanceOf(IngestionResponseDto);
+      expect(result.id).toBe(mockIngestionLog.id);
+      expect(result.attemptId).toBe(2);
+      expect(result.status).toBe(status);
+      expect(result.details).toBe(details);
     });
   });
 });

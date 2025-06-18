@@ -10,6 +10,7 @@ import { Document } from '../../database/entities/document.entity';
 import { IngestionStatus } from '../../common/enums/ingestion-status.enum';
 import { IngestionResponseDto, IngestionDataResponseDto } from './dto';
 import { S3Service } from '../aws/services/s3.service';
+import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 
 @Injectable()
 export class IngestionService {
@@ -63,43 +64,20 @@ export class IngestionService {
       );
     }
 
-    // Start transaction to update both document and create ingestion log
-    const queryRunner =
-      this.documentRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Update document status to STARTED
-      await queryRunner.manager.update(Document, documentId, {
-        status: IngestionStatus.STARTED,
-      });
-
-      // Create ingestion log entry
-      const ingestionLog = queryRunner.manager.create(IngestionLog, {
-        document: { id: documentId },
-        status: IngestionStatus.STARTED,
-        details: 'Document ingestion process started',
-      });
-
-      const savedIngestionLog = await queryRunner.manager.save(ingestionLog);
-
-      await queryRunner.commitTransaction();
-
-      // Return the response DTO using constructor
-      return new IngestionResponseDto(savedIngestionLog);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw new BadRequestException('Failed to start ingestion process');
-    } finally {
-      await queryRunner.release();
-    }
+    // Use updateIngestionLog method to start ingestion
+    return this.updateIngestionLog(
+      documentId,
+      IngestionStatus.STARTED,
+      'Document ingestion process started',
+    );
   }
 
   async getIngestionData(
     documentId: string,
     userId: string,
-  ): Promise<IngestionDataResponseDto> {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResponseDto<IngestionDataResponseDto>> {
     // Verify document exists and user has access
     const document = await this.documentRepository.findOne({
       where: { id: documentId },
@@ -116,19 +94,100 @@ export class IngestionService {
       );
     }
 
-    // Get all ingestion logs for the document
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count of ingestion logs for the document
+    const total = await this.ingestionLogRepository.count({
+      where: { document: { id: documentId } },
+    });
+
+    // Get paginated ingestion logs for the document
     const ingestionLogs = await this.ingestionLogRepository.find({
       where: { document: { id: documentId } },
-      order: { createdAt: 'DESC' },
+      order: {
+        attemptId: 'DESC',
+        createdAt: 'DESC',
+      },
+      skip,
+      take: limit,
     });
 
     // Generate presigned URL for the document
     const presignedUrl = await this.s3Service.getPresignedUrl(document.s3Key);
 
-    // Return the response DTO using constructor
-    return new IngestionDataResponseDto(
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+
+    // Create the ingestion data response
+    const ingestionData = new IngestionDataResponseDto(
       { ...document, s3Url: presignedUrl },
       ingestionLogs,
     );
+
+    // Return paginated response
+    return {
+      data: [ingestionData],
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
+  }
+
+  async updateIngestionLog(
+    documentId: string,
+    status: IngestionStatus,
+    details?: string,
+  ): Promise<IngestionResponseDto> {
+    // Find the document
+    const document = await this.documentRepository.findOne({
+      where: { id: documentId },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    // Get the next attempt ID by counting existing attempts for this document
+    const existingAttemptsCount = await this.ingestionLogRepository.count({
+      where: { document: { id: documentId } },
+    });
+    const nextAttemptId = existingAttemptsCount + 1;
+
+    // Start transaction to update both document and create ingestion log
+    const queryRunner =
+      this.documentRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Update document status
+      await queryRunner.manager.update(Document, documentId, {
+        status,
+      });
+
+      // Create new ingestion log entry with attempt ID
+      const ingestionLog = queryRunner.manager.create(IngestionLog, {
+        document: { id: documentId },
+        attemptId: nextAttemptId,
+        status,
+        details: details || `Document status updated to ${status}`,
+      });
+
+      const savedIngestionLog = await queryRunner.manager.save(ingestionLog);
+
+      await queryRunner.commitTransaction();
+
+      // Return the response DTO using constructor
+      return new IngestionResponseDto(savedIngestionLog);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException('Failed to update ingestion log');
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

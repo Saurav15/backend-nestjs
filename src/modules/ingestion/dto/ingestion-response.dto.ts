@@ -16,6 +16,12 @@ export class IngestionResponseDto {
   documentId: string;
 
   @ApiProperty({
+    description: 'The attempt ID for this ingestion process',
+    example: 1,
+  })
+  attemptId: number;
+
+  @ApiProperty({
     description: 'The current status of the ingestion process',
     enum: IngestionStatus,
     example: IngestionStatus.STARTED,
@@ -53,6 +59,7 @@ export class IngestionResponseDto {
 
     this.id = ingestionLog.id;
     this.documentId = ingestionLog.document?.id;
+    this.attemptId = ingestionLog.attemptId;
     this.status = ingestionLog.status;
     this.details = ingestionLog.details;
     this.error = ingestionLog.error;

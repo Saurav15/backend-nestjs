@@ -62,7 +62,6 @@ export class IngestionResponseDto {
     this.attemptId = ingestionLog.attemptId;
     this.status = ingestionLog.status;
     this.details = ingestionLog.details;
-    this.error = ingestionLog.error;
     this.createdAt = ingestionLog.createdAt;
     this.updatedAt = ingestionLog.updatedAt;
   }

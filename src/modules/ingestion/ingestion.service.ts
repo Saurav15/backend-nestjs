@@ -11,6 +11,7 @@ import { IngestionStatus } from '../../common/enums/ingestion-status.enum';
 import { IngestionResponseDto, IngestionDataResponseDto } from './dto';
 import { S3Service } from '../aws/services/s3.service';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
+import { RabbitMQClientService } from '../rabbitmq-client/rabbitmq-client.service';
 
 @Injectable()
 export class IngestionService {
@@ -20,6 +21,7 @@ export class IngestionService {
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
     private readonly s3Service: S3Service,
+    private readonly rabbitMQService: RabbitMQClientService,
   ) {}
 
   async startIngestion(
@@ -65,11 +67,20 @@ export class IngestionService {
     }
 
     // Use updateIngestionLog method to start ingestion
-    return this.updateIngestionLog(
+    const ingestionLog = await this.updateIngestionLog(
       documentId,
       IngestionStatus.STARTED,
       'Document ingestion process started',
     );
+
+    // Publish event to RabbitMQ after successful DB transaction
+    await this.rabbitMQService.publishDocumentIngestionEvent({
+      documentId,
+      userId,
+      attemptId: ingestionLog.attemptId,
+    });
+
+    return ingestionLog;
   }
 
   async getIngestionData(

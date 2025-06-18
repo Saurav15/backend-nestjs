@@ -6,14 +6,19 @@ import { IngestionController } from './ingestion.controller';
 import { IngestionService } from './ingestion.service';
 import { User } from 'src/database/entities/user.entity';
 import { AwsModule } from '../aws/aws.module';
+import { S3Service } from '../aws/services/s3.service';
+import { RabbitMQClientModule } from '../rabbitmq-client/rabbitmq-client.module';
+import { RabbitMQClientService } from '../rabbitmq-client/rabbitmq-client.service';
+import { IngestionEventsController } from './ingestion-events.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([IngestionLog, Document, User]),
     AwsModule,
+    RabbitMQClientModule,
   ],
-  controllers: [IngestionController],
-  providers: [IngestionService],
+  controllers: [IngestionController, IngestionEventsController],
+  providers: [IngestionService, S3Service, RabbitMQClientService],
   exports: [IngestionService],
 })
 export class IngestionModule {}

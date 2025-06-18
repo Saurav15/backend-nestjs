@@ -46,4 +46,16 @@ export class EnvironmentVariables {
 
   @IsString()
   AWS_S3_BUCKET: string;
+
+  @IsString()
+  RABBITMQ_URL: string;
+
+  @IsString()
+  DOCUMENT_INGESTION_QUEUE: string;
+
+  @IsString()
+  DOCUMENT_STATUS_UPDATE_QUEUE: string;
+
+  @IsString()
+  DOCUMENT_STATUS_UPDATE_DLQ: string;
 }

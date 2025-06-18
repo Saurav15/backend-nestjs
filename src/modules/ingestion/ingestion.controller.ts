@@ -24,7 +24,6 @@ import { ResponseBuilder } from '../../common/utils/response-builder';
 import { IngestionService } from './ingestion.service';
 import { IngestionResponseDto, IngestionDataResponseDto } from './dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
 import { ApiResponseInterface } from '../../common/interfaces/api-response.interface';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 
@@ -76,7 +75,7 @@ export class IngestionController {
   async startIngestion(
     @Param('id') documentId: string,
     @User('id') userId: string,
-  ): Promise<any> {
+  ): Promise<ApiResponseInterface<IngestionResponseDto>> {
     const result = await this.ingestionService.startIngestion(
       documentId,
       userId,

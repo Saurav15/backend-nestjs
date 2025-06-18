@@ -28,9 +28,4 @@ export class IngestionLog extends BaseEntity {
   @IsString()
   @IsOptional()
   details: string;
-
-  @Column({ nullable: true })
-  @IsString()
-  @IsOptional()
-  error: string;
 }

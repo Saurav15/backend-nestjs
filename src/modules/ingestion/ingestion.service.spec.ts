@@ -8,12 +8,14 @@ import { Document } from '../../database/entities/document.entity';
 import { IngestionStatus } from '../../common/enums/ingestion-status.enum';
 import { IngestionResponseDto, IngestionDataResponseDto } from './dto';
 import { S3Service } from '../aws/services/s3.service';
+import { RabbitMQClientService } from '../rabbitmq-client/rabbitmq-client.service';
 
 describe('IngestionService', () => {
   let service: IngestionService;
   let ingestionLogRepository: Repository<IngestionLog>;
   let documentRepository: Repository<Document>;
   let s3Service: S3Service;
+  let rabbitMQClientService: RabbitMQClientService;
 
   const mockIngestionLogRepository = {
     findOne: jest.fn(),
@@ -42,6 +44,11 @@ describe('IngestionService', () => {
 
   const mockS3Service = {
     getPresignedUrl: jest.fn(),
+  };
+
+  const mockRabbitMQClientService = {
+    publishDocumentIngestionEvent: jest.fn(),
+    sendToDLQ: jest.fn(),
   };
 
   const mockQueryRunner = {
@@ -73,6 +80,10 @@ describe('IngestionService', () => {
           provide: S3Service,
           useValue: mockS3Service,
         },
+        {
+          provide: RabbitMQClientService,
+          useValue: mockRabbitMQClientService,
+        },
       ],
     }).compile();
 
@@ -84,6 +95,9 @@ describe('IngestionService', () => {
       getRepositoryToken(Document),
     );
     s3Service = module.get<S3Service>(S3Service);
+    rabbitMQClientService = module.get<RabbitMQClientService>(
+      RabbitMQClientService,
+    );
 
     // Reset mocks
     jest.clearAllMocks();
@@ -213,7 +227,7 @@ describe('IngestionService', () => {
       mockDocumentRepository.findOne.mockResolvedValue({
         id: 'document-id',
         status: IngestionStatus.PENDING,
-        user: { id: 'different-user-id' },
+        user: { id: 'owner-user-id' },
       });
 
       // Act & Assert

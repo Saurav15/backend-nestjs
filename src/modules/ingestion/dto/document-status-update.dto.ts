@@ -10,4 +10,8 @@ export class DocumentStatusUpdateDto {
   @IsOptional()
   @IsString()
   details?: string;
+
+  @IsOptional()
+  @IsString()
+  summary?: string;
 }

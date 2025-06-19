@@ -23,11 +23,12 @@ export class DocumentResponseDto {
   s3Url: string;
 
   @ApiProperty({
-    description: 'URL to processed data in S3 (post-ingestion)',
-    example: 'https://example.com/processed-data',
+    description: 'Summary of the document (if available)',
+    example: 'This is a summary of the document.',
     required: false,
+    type: String,
   })
-  processedDataUrl?: string;
+  summary?: string;
 
   @ApiProperty({
     description: 'Current status of the document ingestion',
@@ -54,7 +55,7 @@ export class DocumentResponseDto {
     this.id = document.id;
     this.title = document.title;
     this.s3Url = document.s3Url;
-    this.processedDataUrl = document.processedDataUrl;
+    this.summary = document.summary;
     this.status = document.status;
     this.createdAt = document.createdAt;
     this.updatedAt = document.updatedAt;

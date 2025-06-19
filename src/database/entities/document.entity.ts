@@ -23,10 +23,9 @@ export class Document extends BaseEntity {
   @IsUrl()
   s3Key: string; // URL to the raw document in S3
 
-  @Column({ nullable: true })
-  @IsUrl()
+  @Column({ type: 'text', nullable: true })
   @IsOptional()
-  processedDataUrl: string; // S3 URL to processed data (post-ingestion)
+  summary: string; // Large summary text
 
   @Index('idx_document_user_id')
   @ManyToOne(() => User, (user) => user.documents, {

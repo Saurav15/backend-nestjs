@@ -52,8 +52,10 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: [rabbitmqUrl],
-      queue: documentStatusQueue, // Listen for status updates from Python
+      queue: documentStatusQueue,
       queueOptions: { durable: true },
+      prefetchCount: 1,
+      noAck: false,
     },
   });
 

@@ -22,7 +22,7 @@ const mockDocument = {
   id: 'doc-uuid',
   title: 'Project Proposal',
   s3Key: 'users/user-uuid/documents/doc-uuid.pdf',
-  processedDataUrl: 'https://example.com/processed-data',
+  summary: 'This is a summary of the document.',
   status: IngestionStatus.PENDING,
   createdAt: new Date('2024-03-20T10:00:00Z'),
   updatedAt: new Date('2024-03-20T10:00:00Z'),

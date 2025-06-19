@@ -46,9 +46,12 @@ export class IngestionService {
     }
 
     // Check if document is in a valid state to start ingestion
-    if (document.status !== IngestionStatus.PENDING) {
+    if (
+      document.status !== IngestionStatus.PENDING &&
+      document.status !== IngestionStatus.FAILED
+    ) {
       throw new BadRequestException(
-        `Document is in ${document.status} status. Only documents with PENDING status can start ingestion.`,
+        `Document is in ${document.status} status. Only documents with PENDING or FAILED status can start ingestion.`,
       );
     }
 
@@ -78,6 +81,7 @@ export class IngestionService {
       documentId,
       userId,
       attemptId: ingestionLog.attemptId,
+      s3Key: document.s3Key,
     });
 
     return ingestionLog;
@@ -152,6 +156,7 @@ export class IngestionService {
     documentId: string,
     status: IngestionStatus,
     details?: string,
+    summary?: any,
   ): Promise<IngestionResponseDto> {
     // Find the document
     const document = await this.documentRepository.findOne({
@@ -162,32 +167,52 @@ export class IngestionService {
       throw new NotFoundException('Document not found');
     }
 
-    // Get the next attempt ID by counting existing attempts for this document
-    const existingAttemptsCount = await this.ingestionLogRepository.count({
-      where: { document: { id: documentId } },
-    });
-    const nextAttemptId = existingAttemptsCount + 1;
-
-    // Start transaction to update both document and create ingestion log
+    // Start transaction to create a new ingestion log for every event
     const queryRunner =
       this.documentRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Update document status
-      await queryRunner.manager.update(Document, documentId, {
-        status,
-      });
+      // Only update document summary if status is COMPLETED and result has a summary
+      const updateDoc: any = { status };
+      if (
+        status === IngestionStatus.COMPLETED &&
+        summary &&
+        typeof summary === 'string'
+      ) {
+        updateDoc.summary = summary;
+      }
+      await queryRunner.manager.update(Document, documentId, updateDoc);
 
-      // Create new ingestion log entry with attempt ID
+      // Find the latest log for this document
+      const lastLog = await this.ingestionLogRepository.findOne({
+        where: { document: { id: documentId } },
+        order: { attemptId: 'DESC', createdAt: 'DESC' },
+      });
+      let attemptId = 1;
+      if (lastLog) {
+        // If last log is COMPLETED or FAILED, increment attemptId for new STARTED
+        if (
+          status === IngestionStatus.STARTED &&
+          (lastLog.status === IngestionStatus.COMPLETED ||
+            lastLog.status === IngestionStatus.FAILED)
+        ) {
+          attemptId = lastLog.attemptId + 1;
+        } else {
+          // For all other cases, use the latest attemptId
+          attemptId = lastLog.attemptId;
+        }
+      }
+      // If no log exists, attemptId remains 1
+
+      // Always create a new log entry for each event
       const ingestionLog = queryRunner.manager.create(IngestionLog, {
         document: { id: documentId },
-        attemptId: nextAttemptId,
+        attemptId,
         status,
         details: details || `Document status updated to ${status}`,
       });
-
       const savedIngestionLog = await queryRunner.manager.save(ingestionLog);
 
       await queryRunner.commitTransaction();

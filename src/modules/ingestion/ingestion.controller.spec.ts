@@ -154,14 +154,19 @@ describe('IngestionController', () => {
       mockIngestionService.getIngestionData.mockResolvedValue(
         mockIngestionDataResponse,
       );
-
+      const paginationDto = { page: 1, limit: 10 };
       // Act
-      const result = await controller.getIngestionData(documentId, mockUser.id);
-
+      const result = await controller.getIngestionData(
+        documentId,
+        mockUser.id,
+        paginationDto,
+      );
       // Assert
       expect(service.getIngestionData).toHaveBeenCalledWith(
         documentId,
         mockUser.id,
+        paginationDto.page,
+        paginationDto.limit,
       );
       expect(result).toEqual(
         ResponseBuilder.success(
@@ -178,10 +183,10 @@ describe('IngestionController', () => {
       mockIngestionService.getIngestionData.mockRejectedValue(
         new Error(errorMessage),
       );
-
+      const paginationDto = { page: 1, limit: 10 };
       // Act & Assert
       await expect(
-        controller.getIngestionData(documentId, mockUser.id),
+        controller.getIngestionData(documentId, mockUser.id, paginationDto),
       ).rejects.toThrow(errorMessage);
     });
   });

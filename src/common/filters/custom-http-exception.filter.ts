@@ -1,3 +1,7 @@
+/**
+ * Global exception filter to handle and format all HTTP and system errors.
+ * Logs errors and returns standardized error responses.
+ */
 import {
   ExceptionFilter,
   Catch,
@@ -14,6 +18,11 @@ import { ApiResponseInterface } from '../interfaces/api-response.interface';
 export class CustomHttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(CustomHttpExceptionFilter.name);
 
+  /**
+   * Handles all exceptions and sends a standardized error response.
+   * @param exception The thrown exception
+   * @param host Arguments host
+   */
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -39,6 +48,11 @@ export class CustomHttpExceptionFilter implements ExceptionFilter {
     response.status(statusCode).json(errorResponse);
   }
 
+  /**
+   * Extracts error details, status code, and message from the exception.
+   * @param exception The thrown exception
+   * @returns Error details object
+   */
   private getErrorDetails(exception: unknown): {
     statusCode: number;
     message: string;

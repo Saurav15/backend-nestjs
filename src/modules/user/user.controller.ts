@@ -1,3 +1,7 @@
+/**
+ * Controller for user management endpoints (admin/user listing, profile, role updates).
+ * Secured by JWT and role-based guards.
+ */
 import {
   Controller,
   Get,
@@ -41,6 +45,11 @@ import { Throttle } from '@nestjs/throttler';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /**
+   * Returns a paginated list of all users (admin only).
+   * @param paginationDto Pagination options
+   * @returns Paginated list of users
+   */
   @Get()
   @Version('1')
   @Roles([UserRole.Admin])
@@ -58,10 +67,16 @@ export class UserController {
   async findAll(
     @Query() paginationDto: PaginationDto,
   ): Promise<ApiResponseInterface<PaginatedResponseDto<UserResponseDto>>> {
+    // Only admins can access this endpoint (enforced by guard)
     const data = await this.userService.findAll(paginationDto);
     return ResponseBuilder.success(data, 'Users retrieved successfully', 200);
   }
 
+  /**
+   * Returns the profile of the currently authenticated user.
+   * @param user The authenticated user (injected)
+   * @returns User profile
+   */
   @Get('profile')
   @Version('1')
   @ApiBearerAuth()
@@ -84,6 +99,11 @@ export class UserController {
     );
   }
 
+  /**
+   * Returns a user profile by user ID (admin only).
+   * @param id User ID
+   * @returns User profile
+   */
   @Get(':id')
   @Version('1')
   @Roles([UserRole.Admin])
@@ -106,10 +126,17 @@ export class UserController {
   async getUserById(
     @Param() { id }: IdParamDto,
   ): Promise<ApiResponseInterface<UserResponseDto>> {
+    // Throws if user not found (handled in service)
     const data = await this.userService.findById(id);
     return ResponseBuilder.success(data, 'User retrieved successfully', 200);
   }
 
+  /**
+   * Updates the role of a user (admin only).
+   * @param id User ID
+   * @param updateRoleDto New role
+   * @returns Updated user profile
+   */
   @Patch(':id/role')
   @Version('1')
   @Roles([UserRole.Admin])
@@ -137,6 +164,7 @@ export class UserController {
     @Param() { id }: IdParamDto,
     @Body() updateRoleDto: UpdateRoleDto,
   ): Promise<ApiResponseInterface<UserResponseDto>> {
+    // Throws if user not found or invalid operation (handled in service)
     const data = await this.userService.updateRole(id, updateRoleDto);
     return ResponseBuilder.success(data, 'User role updated successfully', 200);
   }

@@ -1,3 +1,7 @@
+/**
+ * Controller for handling ingestion-related events from RabbitMQ.
+ * Listens for document status update events and updates ingestion logs accordingly.
+ */
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
 import { IngestionService } from './ingestion.service';
@@ -17,6 +21,13 @@ export class IngestionEventsController {
     private readonly rabbitMQClientService: RabbitMQClientService,
   ) {}
 
+  /**
+   * Handles 'document_status_update' events from RabbitMQ.
+   * Validates payload, updates ingestion log, and acknowledges the message.
+   * Sends invalid or failed events to the dead letter queue (DLQ).
+   * @param data Event payload
+   * @param context RabbitMQ context
+   */
   @EventPattern('document_status_update')
   async handleDocumentStatusUpdate(
     @Payload() data: any,

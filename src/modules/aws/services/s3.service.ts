@@ -1,3 +1,7 @@
+/**
+ * Service for AWS S3 file storage and retrieval.
+ * Handles upload, download, deletion, existence checks, and presigned URL generation for S3 objects.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -32,6 +36,13 @@ export class S3Service implements IS3Service {
     this.bucket = this.configService.get('AWS_S3_BUCKET')!;
   }
 
+  /**
+   * Uploads a file to S3.
+   * @param file File buffer or stream
+   * @param key S3 object key
+   * @param contentType MIME type
+   * @returns S3 key of the uploaded file
+   */
   async uploadFile(
     file: Buffer | Readable,
     key: string,
@@ -56,6 +67,11 @@ export class S3Service implements IS3Service {
     }
   }
 
+  /**
+   * Downloads a file from S3 as a buffer.
+   * @param key S3 object key
+   * @returns File buffer
+   */
   async getFile(key: string): Promise<Buffer> {
     try {
       const command = new GetObjectCommand({
@@ -81,6 +97,10 @@ export class S3Service implements IS3Service {
     }
   }
 
+  /**
+   * Deletes a file from S3.
+   * @param key S3 object key
+   */
   async deleteFile(key: string): Promise<void> {
     try {
       const command = new DeleteObjectCommand({
@@ -98,6 +118,11 @@ export class S3Service implements IS3Service {
     }
   }
 
+  /**
+   * Checks if a file exists in S3.
+   * @param key S3 object key
+   * @returns True if file exists, false otherwise
+   */
   async fileExists(key: string): Promise<boolean> {
     try {
       const command = new HeadObjectCommand({
@@ -119,6 +144,12 @@ export class S3Service implements IS3Service {
     }
   }
 
+  /**
+   * Generates a presigned URL for downloading a file from S3.
+   * @param key S3 object key
+   * @param expiresIn Expiry time in seconds (default: 300)
+   * @returns Presigned URL
+   */
   async getPresignedUrl(key: string, expiresIn: number = 300): Promise<string> {
     try {
       const command = new GetObjectCommand({
@@ -136,6 +167,9 @@ export class S3Service implements IS3Service {
     }
   }
 
+  /**
+   * Lists all S3 buckets (for diagnostics).
+   */
   async listBuckets(): Promise<void> {
     try {
       const command = new ListBucketsCommand({});

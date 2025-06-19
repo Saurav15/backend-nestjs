@@ -19,6 +19,10 @@ import { ApiResponseInterface } from 'src/common/interfaces/api-response.interfa
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { Throttle } from '@nestjs/throttler';
 
+/**
+ * Controller for authentication endpoints (register, login).
+ * Handles user registration and JWT-based login.
+ */
 @ApiTags('Authentication')
 @Controller({
   path: 'auth',
@@ -28,6 +32,11 @@ import { Throttle } from '@nestjs/throttler';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /**
+   * Registers a new user with email, password, and full name.
+   * @param registerDto Registration data
+   * @returns Auth response with JWT token
+   */
   @ApiOperation({
     summary: 'Register a new user',
     description: 'Creates a new user account with email and password.',
@@ -49,6 +58,7 @@ export class AuthController {
   async register(
     @Body() registerDto: RegisterDto,
   ): Promise<ApiResponseInterface<AuthResponseDto>> {
+    // Throws if user already exists or input is invalid (handled in service)
     const data = await this.authService.register(registerDto);
 
     return ResponseBuilder.success(
@@ -58,6 +68,11 @@ export class AuthController {
     );
   }
 
+  /**
+   * Authenticates a user and returns a JWT token.
+   * @param loginDto Login credentials
+   * @returns Auth response with JWT token
+   */
   @Post('login')
   @Version('1')
   @ApiOperation({
@@ -86,27 +101,9 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
   ): Promise<ApiResponseInterface<AuthResponseDto>> {
+    // Throws if credentials are invalid (handled in service)
     const data = await this.authService.login(loginDto);
 
     return ResponseBuilder.success(data, 'Login successful', HttpStatus.OK);
   }
-
-  // @Post('admin-only')
-  // @Roles(UserRole.Admin)
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @ApiOperation({
-  //   summary: 'Admin only endpoint',
-  //   description: 'This endpoint can only be accessed by users with Admin role.',
-  // })
-  // @SwaggerApiResponse({
-  //   status: HttpStatus.OK,
-  //   description: 'Successfully accessed admin endpoint',
-  // })
-  // @SwaggerApiResponse({
-  //   status: HttpStatus.UNAUTHORIZED,
-  //   description: 'User does not have required role',
-  // })
-  // async adminOnly() {
-  //   return ResponseBuilder.success(null, 'Admin access granted', HttpStatus.OK);
-  // }
 }

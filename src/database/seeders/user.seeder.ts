@@ -1,15 +1,54 @@
+/**
+ * Seeder for populating the database with sample users (admins, editors, viewers).
+ */
 import { DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { UserRole } from '../../common/enums';
+import { UserRole } from '../../common/enums/user-role.enum';
 import * as bcrypt from 'bcrypt';
 import { faker } from '@faker-js/faker';
 
 export class UserSeeder {
-  constructor(private dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) {}
 
+  /**
+   * Runs the user seeder: creates and saves sample users of all roles.
+   */
   async run() {
     const userRepository = this.dataSource.getRepository(User);
-    const users: Partial<User>[] = [];
+
+    // Check if seeder has already run (by looking for the static admin user)
+    const existingAdmin = await userRepository.findOne({
+      where: { email: 'admin@example.com' },
+    });
+
+    if (existingAdmin) {
+      console.log('✅ Seeder has already run. Skipping user seeding.');
+      return;
+    }
+
+    // Static users to be shared in README
+    const staticUsers: Partial<User>[] = [
+      {
+        email: 'admin@example.com',
+        fullName: 'Admin User',
+        password: await bcrypt.hash('Admin@123', 10),
+        role: UserRole.Admin,
+      },
+      {
+        email: 'editor@example.com',
+        fullName: 'Editor User',
+        password: await bcrypt.hash('Editor@123', 10),
+        role: UserRole.Editor,
+      },
+      {
+        email: 'viewer@example.com',
+        fullName: 'Viewer User',
+        password: await bcrypt.hash('Viewer@123', 10),
+        role: UserRole.Viewer,
+      },
+    ];
+
+    const users: Partial<User>[] = [...staticUsers];
 
     // Generate 10 admins
     for (let i = 0; i < 10; i++) {

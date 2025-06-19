@@ -1,3 +1,9 @@
+/**
+ * UserModule provides user management features, including user CRUD operations and role management.
+ *
+ * Dependencies:
+ * - TypeOrmModule: Provides access to the User entity for database operations.
+ */
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';

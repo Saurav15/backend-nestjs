@@ -1,3 +1,11 @@
+/**
+ * AuthModule provides authentication endpoints and logic for user registration and login.
+ *
+ * Dependencies:
+ * - TypeOrmModule: Provides access to the User entity for database operations.
+ * - JwtModule: Handles JWT token creation and validation for authentication.
+ * - ConfigModule: Supplies environment-based configuration for JWT secrets and options.
+ */
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';

@@ -27,6 +27,10 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { ApiResponseInterface } from '../../common/interfaces/api-response.interface';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 
+/**
+ * Controller for document ingestion endpoints (start ingestion, get logs).
+ * Secured by JWT and role-based guards. Handles async document processing and log retrieval.
+ */
 @ApiTags('Ingestion')
 @Controller({
   path: 'ingestion',
@@ -37,6 +41,13 @@ import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 
+  /**
+   * Initiates the asynchronous ingestion process for a document.
+   * Only Editors and Admins can start ingestion.
+   * @param documentId Document ID
+   * @param userId Authenticated user ID
+   * @returns Ingestion log entry for the started process
+   */
   @Post('start/:id')
   @HttpCode(HttpStatus.OK)
   @Roles([UserRole.Editor, UserRole.Admin])
@@ -76,6 +87,7 @@ export class IngestionController {
     @Param('id') documentId: string,
     @User('id') userId: string,
   ): Promise<ApiResponseInterface<IngestionResponseDto>> {
+    // Throws if document not found, invalid status, or already in progress (handled in service)
     const result = await this.ingestionService.startIngestion(
       documentId,
       userId,
@@ -87,6 +99,14 @@ export class IngestionController {
     );
   }
 
+  /**
+   * Retrieves paginated ingestion logs and document status for a document.
+   * Only Editors and Admins can access. Only the document owner can view logs.
+   * @param documentId Document ID
+   * @param userId Authenticated user ID
+   * @param paginationDto Pagination options
+   * @returns Paginated ingestion logs and document status
+   */
   @Get('logs/:documentId')
   @Roles([UserRole.Editor, UserRole.Admin])
   @ApiOperation({
@@ -127,6 +147,7 @@ export class IngestionController {
   ): Promise<
     ApiResponseInterface<PaginatedResponseDto<IngestionDataResponseDto>>
   > {
+    // Throws if document not found or user does not own document (handled in service)
     const result = await this.ingestionService.getIngestionData(
       documentId,
       userId,

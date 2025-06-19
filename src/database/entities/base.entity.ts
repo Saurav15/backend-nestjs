@@ -1,3 +1,7 @@
+/**
+ * Abstract base entity with common fields for all entities.
+ * Includes UUID primary key, created/updated/deleted timestamps.
+ */
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -6,9 +10,11 @@ import {
 } from 'typeorm';
 
 export abstract class BaseEntity {
+  /** UUID primary key */
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Timestamp when the entity was created */
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',
@@ -16,6 +22,7 @@ export abstract class BaseEntity {
   })
   createdAt: Date;
 
+  /** Timestamp when the entity was last updated */
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
@@ -24,6 +31,7 @@ export abstract class BaseEntity {
   })
   updatedAt: Date;
 
+  /** Timestamp when the entity was soft-deleted (nullable) */
   @DeleteDateColumn({
     name: 'deleted_at',
     type: 'timestamp',

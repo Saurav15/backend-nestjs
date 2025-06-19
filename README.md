@@ -1,347 +1,144 @@
-# NestJS Backend Service
+# Backend Service – Scalable AI PDF Summary Generator
 
-A robust backend service for document management built with NestJS, featuring document upload, processing, and management capabilities.
+A robust NestJS backend for managing users, authentication, document uploads, and asynchronous PDF summarization. This service exposes a secure REST API, handles user roles, and coordinates with the Python microservice for AI-powered PDF analysis.
 
-## 🚀 Features
+---
 
-- **Document Management**
+## 🧩 Modules Overview
 
-  - Upload documents to AWS S3
-  - Process documents through RabbitMQ queue
-  - Track document status and metadata
-  - Search and filter documents
+- **User Module:** Manages user registration, profile, and role updates (Admin, Editor, Viewer).
+- **Auth Module:** Handles authentication (JWT), login, and registration.
+- **Document Module:** Enables document upload, retrieval, and metadata management.
+- **Ingestion Module:** Orchestrates the PDF summarization process, tracks ingestion status, and logs processing attempts.
 
-- **User Management**
+---
 
-  - Role-based access control (Admin, Editor, Viewer)
-  - JWT authentication
-  - User profile management
+## 📚 Key API Endpoints
 
-- **Security Features**
+### 📖 API Documentation (Swagger)
 
-  - Rate limiting
-  - API versioning
-  - JWT authentication
-  - Role-based guards
+Interactive API documentation is available via Swagger UI. You can explore all endpoints, see request/response schemas, and try out the APIs directly from your browser:
 
-- **Infrastructure**
-  - PostgreSQL database
-  - RabbitMQ message queue
-  - AWS S3 integration
-  - Docker containerization
+- **Swagger UI:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 
-## 📁 Project Structure
+| Endpoint                         | Method | Description                                  |
+| -------------------------------- | ------ | -------------------------------------------- |
+| `/auth/register`                 | POST   | Register a new user (default role: Viewer)   |
+| `/auth/login`                    | POST   | User login, returns JWT                      |
+| `/user/:id/role`                 | PATCH  | Update a user's role (Admin only)            |
+| `/document/upload`               | POST   | Upload a new PDF document (Editor only)      |
+| `/document/:id`                  | GET    | Get document details by ID                   |
+| `/document`                      | GET    | List all documents (with filters)            |
+| `/user/profile`                  | GET    | Get current user's profile                   |
+| `/ingestion/start/:documentId`   | POST   | Start PDF summarization (async, Editor only) |
+| `/ingestion/logs/:documentId`    | GET    | Get ingestion logs and status for a document |
+| `/document/:id/summary`          | GET    | Get the summary of a document by ID          |
+| `/document/:id/summary/download` | GET    | Download the summary of a document as a file |
+| `/document/:id/summary/history`  | GET    | Get the history of summaries for a document  |
 
-```
-├── src/
-│   ├── config/                 # Configuration files
-│   │   ├── config.module.ts    # NestJS configuration module
-│   │   ├── config.validation.ts # Environment validation
-│   │   └── swagger.config.ts   # Swagger documentation config
-│   │
-│   ├── common/                 # Shared utilities and middleware
-│   │   ├── decorators/         # Custom decorators
-│   │   ├── enums/             # Enum definitions
-│   │   ├── filters/           # Exception filters
-│   │   ├── guards/            # Authentication and authorization guards
-│   │   ├── interceptors/      # Request/Response interceptors
-│   │   ├── interfaces/        # Shared interfaces
-│   │   └── utils/             # Utility functions
-│   │
-│   ├── database/              # Database configuration
-│   │   ├── config/            # TypeORM configuration
-│   │   ├── entities/          # Database entities
-│   │   ├── migrations/        # Database migrations
-│   │   └── seeders/           # Database seeders
-│   │
-│   ├── modules/               # Application modules
-│   │   ├── auth/              # Authentication module
-│   │   ├── user/              # User management
-│   │   ├── document/          # Document management
-│   │   ├── aws/               # AWS S3 integration
-│   │   └── health/            # Health checks
-│   │
-│   └── main.ts                # Application entry point
-│
-├── test/                      # Test files
-├── Dockerfile                 # Production Docker configuration
-├── Dockerfile.dev             # Development Docker configuration
-├── entrypoint.sh              # Container entrypoint script
-└── package.json               # Dependencies and scripts
-```
+---
 
-## 🛠️ Prerequisites
+## 🔄 User Flow (with API References)
 
-- Node.js (v16 or higher)
-- Docker and Docker Compose
-- AWS Account (for S3)
-- PostgreSQL
-- RabbitMQ
+1. **User Registration**
+   - User registers via [`/auth/register`](#) (assigned role: Viewer).
+2. **Role Upgrade**
+   - Admin updates user role to Editor via [`/user/:id/role`](#).
+3. **Document Upload**
+   - Editor uploads a PDF via [`/document/upload`](#).
+   - Document details can be viewed via [`/document/:id`](#).
+4. **Start Summarization**
+   - Editor triggers summarization via [`/ingestion/start/:documentId`](#).
+   - This is asynchronous: backend emits an event to the Python service.
+   - API responds immediately with a "started" status.
+5. **Track Progress**
+   - User checks status/logs via [`/ingestion/logs/:documentId`](#), including attempt numbers and error trails.
+   - If processing fails, user can retry; each attempt is logged and visible in the logs.
+
+---
 
 ## 🚀 Getting Started
 
-### 1. **Clone the Repository**
+### 1. Clone the Backend Repository
 
 ```bash
-git clone https://github.com/your-username/jk-tech-assignment.git
-cd jk-tech-assignment/backend
+git clone https://github.com/Saurav15/pdf-analyzer-microservice.git
+cd pdf-analyzer-microservice/backend
 ```
 
-### 2. **Environment Setup**
+### 2. Environment Setup
 
-The application uses different environment files based on `NODE_ENV`:
+- Copy the example environment file and edit as needed:
+  ```bash
+  cp .env.example .env
+  # Edit .env with your configuration
+  ```
 
-- **Development**: `.env.development.local` → `.env.development` → `.env.local` → `.env`
-- **Production**: `.env.production.local` → `.env.production` → `.env.local` → `.env`
-
-#### Create Environment Files
-
-```bash
-# Development environment
-cp .env.example .env.development.local
-# Edit with your development configuration
-nano .env.development.local
-
-# Production environment
-cp .env.example .env.production.local
-# Edit with your production configuration
-nano .env.production.local
-```
-
-#### Required Environment Variables
-
-```bash
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=your-username
-DB_PASSWORD=your-password
-DB_DATABASE=your-database
-
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=24h
-
-# AWS Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_S3_BUCKET=your-s3-bucket-name
-
-# RabbitMQ Configuration
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_USER=guest
-RABBITMQ_PASSWORD=guest
-RABBITMQ_QUEUE=documents_queue
-```
-
-### 3. **Install Dependencies**
+### 3. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 4. **Database Setup**
+### 4. External Service Dependencies
 
-#### Manual Migration Execution
+- You can connect to your own PostgreSQL and RabbitMQ instances, **or**
+- Use the Docker Compose setup in the parent repo:
+  ```bash
+  # From the project root
+  docker compose -f docker-compose.dev.yml --profile infra up
+  ```
+
+### 5. Run Database Migrations
 
 ```bash
-# Development migrations
-npm run migration:run:dev
-
-# Production migrations
+# For development
+dnpm run migration:run:dev
+# For production
 npm run migration:run:prod
 ```
 
-#### Database Seeding
+### 6. Run Seeders
 
 ```bash
-# Run seeders
 npm run seed
 ```
 
-### 5. **Start the Application**
-
-#### Local Development
+### 7. Start the Application
 
 ```bash
-# Development mode
+# Development
 npm run start:dev
-
-# Production mode
+# Production
 npm run build
 npm run start:prod
 ```
 
-## 📦 Docker Deployment
+## 🧑‍💻 Static Test Users
 
-### Option 1: Full Microservices Stack (Recommended)
+The following static users are always seeded for testing/demo purposes:
 
-If you want to run the complete application with all microservices (backend, database, RabbitMQ, Python consumer), use the root repository's docker-compose:
+| Role   | Email              | Password   |
+| ------ | ------------------ | ---------- |
+| Admin  | admin@example.com  | Admin@123  |
+| Editor | editor@example.com | Editor@123 |
+| Viewer | viewer@example.com | Viewer@123 |
 
-```bash
-# Navigate to the root repository
-cd jk-tech-assignment
+---
 
-# Development environment
-docker-compose -f docker-compose.dev.yml up
+## 🛡️ Features & Best Practices
 
-# Production environment
-docker-compose up
-```
+- **Authentication:** Secure JWT-based login and route protection.
+- **Authorization:** Role-based access control (Admin, Editor, Viewer).
+- **Database Migrations & Seeding:** Automated and manual scripts for schema and data setup.
+- **API Versioning:** URL-based versioning for future-proof APIs.
+- **Security:**
+  - Helmet for HTTP header protection
+  - Rate limiting
+  - Input validation and sanitization
+- **Logging:** Centralized and structured logging for all actions and errors.
+- **Docker Support:** Containerized for easy deployment and local development.
 
-The root repository contains:
+---
 
-- `docker-compose.dev.yml` - Development setup with all services
-- `docker-compose.yml` - Production setup with all services
-
-### Option 2: Standalone Backend Service
-
-If you only want to build and run the backend service independently:
-
-#### Building the Docker Image
-
-```bash
-# Build for development
-docker build -t jk-tech-backend:dev --build-arg NODE_ENV=development .
-
-# Build for production
-docker build -t jk-tech-backend:prod --build-arg NODE_ENV=production .
-```
-
-**Note:** The `--build-arg NODE_ENV` is used for build-time defaults, but the actual `NODE_ENV` at runtime will be determined by:
-
-- Environment variables passed via `--env-file`
-- Environment variables set in docker-compose
-- Environment variables passed via `-e` flags
-- Defaults to `development` if not specified
-
-#### Running the Docker Container
-
-```bash
-# Run development container
-docker run -d \
-  --name jk-tech-backend-dev \
-  -p 3000:3000 \
-  --env-file .env.development.local \
-  jk-tech-backend:dev
-
-# Run production container
-docker run -d \
-  --name jk-tech-backend-prod \
-  -p 3000:3000 \
-  --env-file .env.production.local \
-  jk-tech-backend:prod
-```
-
-### Automatic Migration Execution
-
-The application uses an entrypoint script (`entrypoint.sh`) that automatically runs migrations on container startup:
-
-1. **Detects the environment** based on `NODE_ENV`
-2. **Runs the appropriate migration command**:
-   - `npm run migration:run:dev` for development
-   - `npm run migration:run:prod` for production
-3. **Provides clear logging** of which environment and migration is being executed
-4. **Handles fallback** to development if `NODE_ENV` is not set
-
-Example output:
-
-```bash
-🛠 Running migrations for NODE_ENV: development
-🔧 Running development migrations...
-🚀 Starting app: node dist/main
-```
-
-## 📚 API Documentation
-
-Swagger documentation is available at:
-
-```
-http://localhost:3000/api/docs
-```
-
-## 🔒 Security Features
-
-### Rate Limiting
-
-- Global rate limiting applied to all routes
-- Configurable limits per endpoint
-- IP-based tracking
-
-### API Versioning
-
-- URL-based versioning (e.g., `/v1/users`)
-- Header-based versioning support
-- Default version: v1
-
-### Authentication
-
-- JWT-based authentication
-- Role-based access control
-- Token refresh mechanism
-
-## 📝 Database Migrations
-
-### Create Migration
-
-```bash
-npm run migration:generate --name=your-migration-name
-```
-
-### Run Migrations Manually
-
-```bash
-# Development migrations
-npm run migration:run:dev
-
-# Production migrations
-npm run migration:run:prod
-```
-
-### Revert Migration
-
-```bash
-npm run migration:revert
-```
-
-## 🌱 Database Seeding
-
-### Run Seeders
-
-```bash
-# Run all seeders
-npm run seed
-```
-
-## 🧪 Testing
-
-```bash
-# Unit tests
-npm run test
-
-# Test coverage
-npm run test:cov
-
-# E2E tests
-npm run test:e2e
-```
-
-## 📤 AWS S3 Integration
-
-- Document storage in S3 buckets
-- Configurable bucket and region
-- Secure file upload/download
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+For detailed module and API documentation, see the [Swagger UI](http://localhost:3000/api/docs) after starting the service.

@@ -1,3 +1,7 @@
+/**
+ * Interceptor to standardize all HTTP responses in the API.
+ * Wraps responses in a consistent format for success.
+ */
 import {
   Injectable,
   NestInterceptor,
@@ -13,6 +17,12 @@ import { ApiResponseInterface } from '../interfaces/api-response.interface';
 export class ResponseInterceptor<T>
   implements NestInterceptor<T, ApiResponseInterface<T>>
 {
+  /**
+   * Intercepts outgoing responses and wraps them in a standardized format.
+   * @param context Execution context
+   * @param next Call handler
+   * @returns Observable of standardized API response
+   */
   intercept(
     context: ExecutionContext,
     next: CallHandler,

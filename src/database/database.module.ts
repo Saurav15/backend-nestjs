@@ -1,3 +1,10 @@
+/**
+ * DatabaseModule configures and provides the TypeORM database connection for the application.
+ *
+ * Dependencies:
+ * - TypeOrmModule: Registers and configures the database connection asynchronously.
+ * - ConfigService: Supplies environment-based configuration for database connection options.
+ */
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';

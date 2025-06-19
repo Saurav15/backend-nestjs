@@ -40,6 +40,10 @@ import { ListDocumentsDto } from './dto/list-documents.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { Throttle } from '@nestjs/throttler';
 
+/**
+ * Controller for document management endpoints (upload, list, retrieve by ID).
+ * Secured by JWT and role-based guards. Integrates with S3 for file storage.
+ */
 @ApiTags('Documents')
 @Controller({
   path: 'documents',
@@ -50,6 +54,14 @@ import { Throttle } from '@nestjs/throttler';
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
 
+  /**
+   * Upload a PDF document to S3 and save its metadata.
+   * Only Admins and Editors can upload.
+   * @param file PDF file
+   * @param uploadDocumentDto Document metadata
+   * @param user Authenticated user
+   * @returns Uploaded document details
+   */
   @Post('upload')
   @Roles([UserRole.Admin, UserRole.Editor])
   @UseInterceptors(FileInterceptor('file'))
@@ -94,6 +106,7 @@ export class DocumentController {
     @Body() uploadDocumentDto: UploadDocumentDto,
     @User() user: UserEntity,
   ): Promise<ApiResponseInterface<DocumentResponseDto>> {
+    // Throws if file is missing or upload fails (handled in service)
     const document = await this.documentService.uploadDocument(
       file,
       uploadDocumentDto,
@@ -106,6 +119,14 @@ export class DocumentController {
     );
   }
 
+  /**
+   * List paginated documents for the authenticated user.
+   * Supports filtering by status and ordering.
+   * Only Admins and Editors can list documents.
+   * @param query List options
+   * @param user Authenticated user
+   * @returns Paginated list of documents
+   */
   @Get()
   @Roles([UserRole.Admin, UserRole.Editor])
   @ApiOperation({
@@ -137,6 +158,13 @@ export class DocumentController {
     );
   }
 
+  /**
+   * Get a document by its ID for the authenticated user.
+   * Only Admins and Editors can access.
+   * @param id Document ID
+   * @param user Authenticated user
+   * @returns Document details
+   */
   @Get(':id')
   @Roles([UserRole.Admin, UserRole.Editor])
   @ApiParam({
@@ -158,6 +186,7 @@ export class DocumentController {
     @Param('id') id: string,
     @User() user: UserEntity,
   ): Promise<ApiResponseInterface<DocumentResponseDto>> {
+    // Throws if document not found or retrieval fails (handled in service)
     const document = await this.documentService.getDocumentById(id, user);
     return ResponseBuilder.success(document, 'Document retrieved successfully');
   }

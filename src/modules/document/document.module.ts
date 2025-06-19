@@ -1,3 +1,11 @@
+/**
+ * DocumentModule provides endpoints and logic for document upload, retrieval, and listing.
+ * Integrates with AWS S3 for storage and supports user-based access control.
+ *
+ * Dependencies:
+ * - TypeOrmModule: Provides access to User and Document entities for database operations.
+ * - AwsModule: Provides S3Service for file storage and retrieval in AWS S3.
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentController } from './document.controller';

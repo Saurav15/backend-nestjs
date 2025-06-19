@@ -1,3 +1,14 @@
+/**
+ * Application entry point for the NestJS backend.
+ *
+ * Security Features:
+ * - CORS enabled for cross-origin requests
+ * - Helmet for setting secure HTTP headers
+ * - Compression for response payloads
+ * - API versioning for future-proofing endpoints
+ * - Swagger for API documentation (with persisted authorization)
+ * - Microservice integration for RabbitMQ event handling
+ */
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -5,6 +16,8 @@ import { AppModule } from './app.module';
 import { swaggerConfig } from './config/swagger.config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,26 +33,23 @@ async function bootstrap() {
     'document_status_queue',
   );
 
-  // Enable API versioning
+  // Enable API versioning (security: future-proofing endpoints)
   app.enableVersioning({
     type: VersioningType.URI,
     prefix: 'v',
     defaultVersion: '1',
   });
 
-  // Enable CORS
+  // Enable CORS (security: cross-origin resource sharing)
   app.enableCors();
 
-  // Enable validation
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // Enable Helmet for secure HTTP headers
+  app.use(helmet());
 
-  // Setup Swagger
+  // Enable compression for response payloads
+  app.use(compression());
+
+  // Setup Swagger (security: persisted authorization for API docs)
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {

@@ -1,3 +1,6 @@
+/**
+ * Service for user management logic, including listing, retrieval, and role updates.
+ */
 import {
   Injectable,
   NotFoundException,
@@ -21,6 +24,11 @@ export class UserService {
     private userRepository: Repository<User>,
   ) {}
 
+  /**
+   * Returns a paginated list of users.
+   * @param paginationDto Pagination options
+   * @returns Paginated list of users
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<UserResponseDto>> {
@@ -48,9 +56,16 @@ export class UserService {
     };
   }
 
+  /**
+   * Returns a user by their unique ID.
+   * Throws NotFoundException if user does not exist.
+   * @param id User ID
+   * @returns UserResponseDto
+   */
   async findById(id: string): Promise<UserResponseDto> {
     const user = await this.userRepository.findOneBy({ id });
 
+    // Throw if user not found
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -58,12 +73,22 @@ export class UserService {
     return new UserResponseDto(user);
   }
 
+  /**
+   * Updates the role of a user.
+   * Throws NotFoundException if user does not exist.
+   * Throws ForbiddenException if trying to demote an admin.
+   * Throws HttpException if user already has the role.
+   * @param userId User ID
+   * @param updateRoleDto New role
+   * @returns Updated user
+   */
   async updateRole(
     userId: string,
     updateRoleDto: UpdateRoleDto,
   ): Promise<UserResponseDto> {
     const user = await this.userRepository.findOneBy({ id: userId });
 
+    // Throw if user not found
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
@@ -73,6 +98,7 @@ export class UserService {
       throw new ForbiddenException('Cannot change role of an admin user');
     }
 
+    // Prevent setting the same role
     if (user.role === updateRoleDto.role) {
       throw new HttpException(
         'User already has this role',

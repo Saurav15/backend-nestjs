@@ -1,3 +1,12 @@
+/**
+ * IngestionModule handles document ingestion workflows, including starting ingestion,
+ * tracking ingestion logs, and processing status updates from the event queue.
+ *
+ * Dependencies:
+ * - TypeOrmModule: Provides access to IngestionLog, Document, and User entities for database operations.
+ * - AwsModule: Provides S3Service for presigned URL generation and S3 integration.
+ * - RabbitMQClientModule: Enables publishing and consuming document ingestion events via RabbitMQ.
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IngestionLog } from '../../database/entities/ingestion-logs.entity';

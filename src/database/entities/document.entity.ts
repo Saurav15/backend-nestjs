@@ -1,3 +1,7 @@
+/**
+ * Entity representing a document uploaded by a user.
+ * Includes title, S3 key, summary, status, owner, and ingestion logs.
+ */
 import {
   Entity,
   Column,
@@ -15,18 +19,22 @@ import { IsEnum, IsString, IsUrl, IsOptional } from 'class-validator';
 // Document Entity
 @Entity('documents')
 export class Document extends BaseEntity {
+  /** Title of the document */
   @Column()
   @IsString()
   title: string;
 
+  /** S3 key for the document file */
   @Column()
   @IsUrl()
   s3Key: string; // URL to the raw document in S3
 
+  /** AI-generated summary of the document (optional) */
   @Column({ type: 'text', nullable: true })
   @IsOptional()
   summary: string; // Large summary text
 
+  /** Owner of the document (user) */
   @Index('idx_document_user_id')
   @ManyToOne(() => User, (user) => user.documents, {
     onDelete: 'CASCADE',
@@ -34,6 +42,7 @@ export class Document extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  /** Ingestion status of the document */
   @Column({
     type: 'enum',
     enum: IngestionStatus,
@@ -42,6 +51,7 @@ export class Document extends BaseEntity {
   @IsEnum(IngestionStatus)
   status: IngestionStatus;
 
+  /** Ingestion logs for the document */
   @OneToMany(() => IngestionLog, (logs) => logs.document, {
     cascade: true,
     onDelete: 'CASCADE',

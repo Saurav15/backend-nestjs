@@ -1,3 +1,7 @@
+/**
+ * Controller for health and readiness endpoints.
+ * Provides system, database, and memory health checks for monitoring and orchestration.
+ */
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
@@ -18,6 +22,10 @@ export class HealthController {
     private memory: MemoryHealthIndicator,
   ) {}
 
+  /**
+   * Returns system health status, including database and memory checks.
+   * @returns Health check result
+   */
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: 'Check system health' })
@@ -32,6 +40,10 @@ export class HealthController {
     ]);
   }
 
+  /**
+   * Returns application readiness status for orchestration probes.
+   * @returns Readiness status and timestamp
+   */
   @Get('ready')
   @ApiOperation({ summary: 'Check application readiness' })
   @ApiResponse({

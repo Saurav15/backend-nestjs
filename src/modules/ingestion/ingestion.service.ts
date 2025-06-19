@@ -1,3 +1,7 @@
+/**
+ * Service for document ingestion workflows: starting ingestion, retrieving logs, and updating ingestion status.
+ * Handles DB operations, S3 integration, and RabbitMQ event publishing.
+ */
 import {
   Injectable,
   NotFoundException,
@@ -24,6 +28,14 @@ export class IngestionService {
     private readonly rabbitMQService: RabbitMQClientService,
   ) {}
 
+  /**
+   * Starts the ingestion process for a document.
+   * Verifies ownership, document status, and prevents duplicate ingestion.
+   * Publishes an event to RabbitMQ to trigger async processing.
+   * @param documentId Document ID
+   * @param userId Authenticated user ID
+   * @returns Ingestion log entry for the started process
+   */
   async startIngestion(
     documentId: string,
     userId: string,
@@ -87,6 +99,15 @@ export class IngestionService {
     return ingestionLog;
   }
 
+  /**
+   * Retrieves paginated ingestion logs and document status for a document.
+   * Verifies ownership and access.
+   * @param documentId Document ID
+   * @param userId Authenticated user ID
+   * @param page Page number
+   * @param limit Page size
+   * @returns Paginated ingestion logs and document status
+   */
   async getIngestionData(
     documentId: string,
     userId: string,
@@ -152,6 +173,15 @@ export class IngestionService {
     };
   }
 
+  /**
+   * Updates the ingestion log and document status for a document.
+   * Handles transaction, attempt tracking, and summary updates.
+   * @param documentId Document ID
+   * @param status New ingestion status
+   * @param details Optional details
+   * @param summary Optional summary (for COMPLETED status)
+   * @returns Updated ingestion log entry
+   */
   async updateIngestionLog(
     documentId: string,
     status: IngestionStatus,

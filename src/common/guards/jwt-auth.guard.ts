@@ -1,3 +1,7 @@
+/**
+ * Guard to protect routes using JWT authentication.
+ * Validates JWT token and attaches user to the request object.
+ */
 import {
   Injectable,
   CanActivate,
@@ -21,6 +25,11 @@ export class JwtAuthGuard implements CanActivate {
     private configService: ConfigService<EnvironmentVariables>,
   ) {}
 
+  /**
+   * Determines if the request has a valid JWT and user.
+   * @param context Execution context
+   * @returns True if access is granted
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
@@ -59,6 +68,11 @@ export class JwtAuthGuard implements CanActivate {
     }
   }
 
+  /**
+   * Extracts the JWT token from the Authorization header.
+   * @param request Express request
+   * @returns JWT token or undefined
+   */
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

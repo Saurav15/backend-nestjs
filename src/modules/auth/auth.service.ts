@@ -1,3 +1,7 @@
+/**
+ * Service for authentication logic: user registration and login.
+ * Handles password hashing, user creation, and JWT token generation.
+ */
 import {
   Injectable,
   UnauthorizedException,
@@ -20,6 +24,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * Registers a new user, hashes password, and returns JWT token.
+   * Throws ConflictException if user already exists.
+   * @param registerDto Registration data
+   * @returns Auth response with JWT token
+   */
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
     const { email, password, fullName } = registerDto;
 
@@ -56,6 +66,12 @@ export class AuthService {
     return AuthResponseDto.create(savedUser, token);
   }
 
+  /**
+   * Authenticates a user and returns JWT token.
+   * Throws UnauthorizedException if credentials are invalid.
+   * @param loginDto Login credentials
+   * @returns Auth response with JWT token
+   */
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const { email, password } = loginDto;
 

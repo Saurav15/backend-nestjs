@@ -1,3 +1,7 @@
+/**
+ * Service for publishing events to RabbitMQ queues and handling dead letter queue (DLQ) logic.
+ * Provides methods for emitting document ingestion events and sending invalid events to DLQ.
+ */
 import { Injectable, Inject, OnModuleInit, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -15,6 +19,9 @@ export class RabbitMQClientService implements OnModuleInit {
     private readonly dlqClient: ClientProxy,
   ) {}
 
+  /**
+   * Called when the module is initialized. Logs RabbitMQ connection status.
+   */
   onModuleInit() {
     // Loggin the connection success or failure of rabbitmq
     this.client
@@ -27,6 +34,10 @@ export class RabbitMQClientService implements OnModuleInit {
       });
   }
 
+  /**
+   * Publishes a document ingestion event to the ingestion queue.
+   * @param documentPayload Event payload
+   */
   async publishDocumentIngestionEvent(documentPayload: any) {
     this.logger.log(
       `Publishing event to document_ingestion_queue: ${JSON.stringify(documentPayload)}`,
@@ -37,6 +48,11 @@ export class RabbitMQClientService implements OnModuleInit {
       .toPromise();
   }
 
+  /**
+   * Publishes an invalid event to the dead letter queue (DLQ).
+   * @param data Event data
+   * @param event Event name
+   */
   async sendToDLQ(data: any, event: string) {
     this.logger.warn(
       `Publishing invalid event to DLQ: ${JSON.stringify({ event, data })}`,

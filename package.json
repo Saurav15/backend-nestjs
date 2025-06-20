@@ -15,7 +15,7 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "migration:generate": "cross-env NODE_OPTIONS='--experimental-specifier-resolution=node' ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli migration:generate src/database/migrations/%npm_config_name% -d src/database/config/typeorm.config.ts",
     "migration:run:dev": "cross-env NODE_ENV=development NODE_OPTIONS=\"--experimental-specifier-resolution=node\" ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/database/config/typeorm.config.ts",
-    "migration:run:prod": "cross-env NODE_ENV=production NODE_OPTIONS='--experimental-specifier-resolution=node' ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli migration:run -d src/database/config/typeorm.config.ts",
+    "migration:run:prod": "cross-env NODE_ENV=production NODE_OPTIONS='--experimental-specifier-resolution=node' node --loader ts-node/esm ./node_modules/typeorm/cli.js migration:run -d dist/database/config/typeorm.config.js",
     "migration:revert": "cross-env NODE_OPTIONS='--experimental-specifier-resolution=node' ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli migration:revert -d src/database/config/typeorm.config.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -23,7 +23,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "ts-node src/database/seeders/run-seeders.ts"
+    "seed": "ts-node src/database/seeders/run-seeders.ts",
+    "seed:dev": "ts-node src/database/seeders/run-seeders.ts",
+    "seed:prod": "node dist/database/seeders/run-seeders.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.828.0",
@@ -50,6 +52,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "compression": "^1.8.0",
+    "cross-env": "^7.0.3",
     "helmet": "^8.1.0",
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
@@ -70,7 +73,6 @@
     "@types/multer": "^1.4.13",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
-    "cross-env": "^7.0.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

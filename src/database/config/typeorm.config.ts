@@ -36,7 +36,7 @@ export const dataSourceConfig = (
     migrationsRun: true,
     synchronize: false,
     logging: isDevelopment,
-    ...(isDevelopment ? {} : { ssl: { rejectUnauthorized: false } }),
+    // ...(isDevelopment ? {} : { ssl: { rejectUnauthorized: false } }),
   };
 };
 

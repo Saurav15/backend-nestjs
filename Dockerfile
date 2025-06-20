@@ -16,8 +16,7 @@ COPY --from=builder /app/dist ./dist
 # TODO: Look into the entrypoint.sh issue! Its not being copied inside the docker image! 
 # Run migrations, seed, and start app in one CMD
 CMD if [ "$NODE_ENV" = "production" ]; then \
-    echo "📦 Running production migrations..." && npm run migration:run:prod; \
+    echo "📦 Running production migrations..." && npm run migration:run:prod && npm run seed:prod && npm run start:prod; \
     else \
-    echo "🔧 Running development migrations..." && npm run migration:run:dev && npm run seed; \
-    fi && \
-    node dist/main
+    echo "🔧 Running development migrations..." && npm run migration:run:dev && npm run seed:dev && npm run start:dev; \
+    fi

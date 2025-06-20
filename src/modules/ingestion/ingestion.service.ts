@@ -59,23 +59,14 @@ export class IngestionService {
 
     // Check if document is in a valid state to start ingestion
     if (
-      document.status !== IngestionStatus.PENDING &&
-      document.status !== IngestionStatus.FAILED
+      document.status === IngestionStatus.COMPLETED
     ) {
       throw new BadRequestException(
         `Document is in ${document.status} status. Only documents with PENDING or FAILED status can start ingestion.`,
       );
     }
 
-    // Check if there's already an active ingestion process
-    const existingActiveLog = await this.ingestionLogRepository.findOne({
-      where: {
-        document: { id: documentId },
-        status: IngestionStatus.STARTED,
-      },
-    });
-
-    if (existingActiveLog) {
+    if (document.status === IngestionStatus.STARTED) {
       throw new BadRequestException(
         'Document ingestion is already in progress',
       );
